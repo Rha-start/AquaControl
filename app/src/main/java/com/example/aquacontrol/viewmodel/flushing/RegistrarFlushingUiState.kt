@@ -8,6 +8,8 @@ data class RegistrarFlushingUiState(
     val temperaturaAntes: String = "",
     val temperaturaDespues: String = "",
     val duracionSegundos: String = "",
+    val fotoRuta: String? = null,
+    val errorFoto: String? = null,
 
     val errorLinea: String? = null,
     val errorObservacion: String? = null,

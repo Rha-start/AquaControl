@@ -170,7 +170,6 @@ fun AppNavHost(
     Scaffold(
         bottomBar = { BottomBar(navController) }
     ) { innerPadding ->
-
         NavHost(
             navController = navController,
             startDestination = Routes.ROLE_SELECTION,
@@ -379,6 +378,44 @@ fun AppNavHost(
                 }
             }
 
+            // Detalle de un registro específico de flushing
+            composable(
+                route = Routes.DETALLE_FLUSHING_PARAM,
+                arguments = listOf(
+                    navArgument("lineaId") {
+                        type = NavType.IntType
+                    },
+                    navArgument("eventoId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStack ->
+                val lineaId = backStack.arguments
+                    ?.getInt("lineaId") ?: 0
+
+                val eventoId = backStack.arguments
+                    ?.getInt("eventoId") ?: 0
+
+                if (lineaId <= 0 || eventoId <= 0) {
+                    Text(
+                        "No se pudo identificar el registro de flushing."
+                    )
+                } else {
+                    val detalleFlushingViewModel: FlushingViewModel =
+                        viewModel(
+                            viewModelStoreOwner = backStack,
+                            factory = historialFactory
+                        )
+
+                    FlushingDetalleScreen(
+                        navController = navController,
+                        lineaId = lineaId,
+                        eventoId = eventoId,
+                        viewModel = detalleFlushingViewModel
+                    )
+                }
+            }
+
             // Alertas calculadas con las últimas mediciones de Room
             composable(Routes.ALERTAS) { backStack ->
                 val alertasViewModel: AlertasViewModel = viewModel(
@@ -395,15 +432,6 @@ fun AppNavHost(
             // Selección para registrar flushing
             composable(Routes.FLUSHING) {
                 FlushingHomeScreen(navController)
-            }
-
-            // Detalle de flushing
-            composable("flushingDetalle/{lineaId}") { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getString("lineaId")
-                    ?.toIntOrNull() ?: 0
-
-                FlushingDetalleScreen(navController, lineaId)
             }
 
             // Simulación compartida entre pantallas

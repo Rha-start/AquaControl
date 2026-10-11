@@ -7,5 +7,6 @@ data class EventoFlushing(
     val temperaturaAntes: Double,
     val temperaturaDespues: Double,
     val duracionSegundos: Int,
-    val observacion: String = ""
+    val observacion: String = "",
+    val fotoRuta: String? = null
 )

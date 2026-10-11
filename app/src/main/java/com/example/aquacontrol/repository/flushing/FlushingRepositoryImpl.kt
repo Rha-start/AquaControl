@@ -41,12 +41,15 @@ class FlushingRepositoryImpl(
             observacion = dto.observacion.trim(),
             temperaturaAntes = dto.temperaturaAntes,
             temperaturaDespues = dto.temperaturaDespues,
-            duracionSegundos = duracion
+            duracionSegundos = duracion,
+            fotoRuta = dto.fotoRuta?.takeIf { it.isNotBlank() }
         )
 
         val idGenerado = localDataSource.guardarFlushing(entity)
 
-        return entity.copy(id = idGenerado.toInt()).toEventoFlushing()
+        return entity.copy(
+            id = idGenerado.toInt()
+        ).toEventoFlushing()
     }
 
     override suspend fun obtenerFlushingPorLinea(
@@ -68,7 +71,8 @@ class FlushingRepositoryImpl(
             temperaturaAntes = temperaturaAntes,
             temperaturaDespues = temperaturaDespues,
             duracionSegundos = duracionSegundos,
-            observacion = observacion
+            observacion = observacion,
+            fotoRuta = fotoRuta
         )
     }
 }

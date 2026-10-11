@@ -2,8 +2,10 @@ package com.example.aquacontrol.iu.flushing
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -64,22 +66,13 @@ fun FlushingScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 16.dp),
-            contentPadding = androidx.compose.foundation.layout.PaddingValues(
-                vertical = 16.dp
-            ),
+            contentPadding = PaddingValues(vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
                 Text(
-                    text = "Historial de flushin",
+                    text = "Historial de flushing",
                     style = MaterialTheme.typography.headlineSmall
-                )
-            }
-
-            item {
-                Text(
-                    text = "Procedimientos registrados para la línea seleccionada.",
-                    style = MaterialTheme.typography.bodyLarge
                 )
             }
 
@@ -93,9 +86,14 @@ fun FlushingScreen(
                         }
                     },
                     enabled = lineaId > 0,
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 48.dp)
                 ) {
-                    Text("Registrar flushin")
+                    Text(
+                        text = "Registrar flushing",
+                        style = MaterialTheme.typography.bodyLarge
+                    )
                 }
             }
 
@@ -119,29 +117,45 @@ fun FlushingScreen(
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
-                                    text = "Fecha: ${evento.fechaHora}",
+                                    text = evento.fechaHora,
                                     style = MaterialTheme.typography.titleMedium
                                 )
 
                                 Text(
-                                    text = "Temperatura antes: ${evento.temperaturaAntes} °C"
+                                    text = "Antes: ${evento.temperaturaAntes} °C",
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
 
                                 Text(
-                                    text = "Temperatura después: ${evento.temperaturaDespues} °C"
+                                    text = "Después: ${evento.temperaturaDespues} °C",
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
 
-                                Text(
-                                    text = "Duración: ${evento.duracionSegundos} segundos"
-                                )
+                                if (!evento.fotoRuta.isNullOrBlank()) {
+                                    Text(
+                                        text = "Con foto de evidencia",
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
 
-                                Text(
-                                    text = "Observación: ${
-                                        evento.observacion.ifBlank {
-                                            "Sin observación"
+                                OutlinedButton(
+                                    onClick = {
+                                        navController.navigate(
+                                            "${Routes.DETALLE_FLUSHING}/" +
+                                                    "${evento.lineaId}/${evento.id}"
+                                        ) {
+                                            launchSingleTop = true
                                         }
-                                    }"
-                                )
+                                    },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(min = 48.dp)
+                                ) {
+                                    Text(
+                                        text = "Ver detalle",
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                }
                             }
                         }
                     }
@@ -150,7 +164,8 @@ fun FlushingScreen(
                 FlushingUiState.Empty -> {
                     item {
                         Text(
-                            text = "Esta línea todavía no tiene registros de flushin."
+                            text = "Esta línea todavía no tiene registros de flushing.",
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -162,7 +177,8 @@ fun FlushingScreen(
                         ) {
                             Text(
                                 text = actual.mensaje,
-                                color = MaterialTheme.colorScheme.error
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyLarge
                             )
 
                             OutlinedButton(
