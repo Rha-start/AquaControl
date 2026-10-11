@@ -67,16 +67,30 @@ class RegistrarFlushingViewModel(
         }
     }
 
+    fun actualizarFoto(ruta: String?) {
+        editar {
+            it.copy(
+                fotoRuta = ruta?.takeIf { valor -> valor.isNotBlank() },
+                errorFoto = null
+            )
+        }
+    }
+
+    fun informarErrorFoto(mensaje: String?) {
+        editar {
+            it.copy(errorFoto = mensaje)
+        }
+    }
+
     private fun editar(
         cambio: (RegistrarFlushingUiState) -> RegistrarFlushingUiState
     ) {
         val actual = _uiState.value
 
-        if (actual.guardando) return
+        if (actual.guardando || actual.eventoGuardado != null) return
 
         _uiState.value = cambio(actual).copy(
-            errorGuardado = null,
-            eventoGuardado = null
+            errorGuardado = null
         )
     }
 
@@ -159,7 +173,8 @@ class RegistrarFlushingViewModel(
             observacion = actual.observacion.trim(),
             temperaturaAntes = temperaturaAntes,
             temperaturaDespues = temperaturaDespues,
-            duracionSegundos = duracion
+            duracionSegundos = duracion,
+            fotoRuta = actual.fotoRuta
         )
 
         _uiState.value = estadoValidado.copy(guardando = true)

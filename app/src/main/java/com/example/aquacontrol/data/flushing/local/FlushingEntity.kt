@@ -13,5 +13,6 @@ data class FlushingEntity(
     val observacion: String,
     val temperaturaAntes: Double,
     val temperaturaDespues: Double,
-    val duracionSegundos: Int
+    val duracionSegundos: Int,
+    val fotoRuta: String? = null
 )
