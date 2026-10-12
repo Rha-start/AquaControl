@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class DetalleLineaViewModel(
@@ -28,7 +29,24 @@ class DetalleLineaViewModel(
 
     private var observacionActual: Job? = null
 
+    fun cargarResumen(lineaId: Int) {
+        cargarDatos(
+            lineaId = lineaId,
+            soloUltimaMedicion = true
+        )
+    }
+
     fun cargarHistorial(lineaId: Int) {
+        cargarDatos(
+            lineaId = lineaId,
+            soloUltimaMedicion = false
+        )
+    }
+
+    private fun cargarDatos(
+        lineaId: Int,
+        soloUltimaMedicion: Boolean
+    ) {
         observacionActual?.cancel()
 
         if (lineaId <= 0) {
@@ -51,26 +69,34 @@ class DetalleLineaViewModel(
                     return@launch
                 }
 
-                temperaturaRepository.observarHistorialPorLinea(lineaId)
-                    .collect { historial ->
-                        // El DAO entrega las mediciones de más nueva
-                        // a más antigua, usando fechaHora e id.
-                        val ultimaMedicion = historial.firstOrNull()
+                val mediciones = if (soloUltimaMedicion) {
+                    temperaturaRepository
+                        .observarUltimaMedicionPorLinea(lineaId)
+                        .map { ultimaMedicion ->
+                            listOfNotNull(ultimaMedicion)
+                        }
+                } else {
+                    // Las alertas necesitan encontrar la medición
+                    // original, aunque existan registros posteriores.
+                    temperaturaRepository
+                        .observarHistorialPorLinea(lineaId)
+                }
 
-                        val linea = LineaMonitoreada(
-                            id = lineaId,
-                            nombre = ubicacion.nombreLinea,
-                            galponId = ubicacion.galponId,
-                            ultimaMedicion = ultimaMedicion
-                        )
+                mediciones.collect { historial ->
+                    val linea = LineaMonitoreada(
+                        id = lineaId,
+                        nombre = ubicacion.nombreLinea,
+                        galponId = ubicacion.galponId,
+                        ultimaMedicion = historial.firstOrNull()
+                    )
 
-                        _uiState.value = DetalleLineaUiState.Success(
-                            nombreGranja = ubicacion.nombreGranja,
-                            nombreGalpon = ubicacion.nombreGalpon,
-                            linea = linea,
-                            historial = historial
-                        )
-                    }
+                    _uiState.value = DetalleLineaUiState.Success(
+                        nombreGranja = ubicacion.nombreGranja,
+                        nombreGalpon = ubicacion.nombreGalpon,
+                        linea = linea,
+                        historial = historial
+                    )
+                }
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {

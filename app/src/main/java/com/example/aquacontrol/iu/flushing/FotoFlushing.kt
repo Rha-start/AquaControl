@@ -182,11 +182,9 @@ private fun cargarFotoReducida(archivo: File): Bitmap? {
             if (corregida !== original) {
                 original.recycle()
             }
-
             corregida
         }
     } catch (e: Exception) {
         null
     }
 }
-

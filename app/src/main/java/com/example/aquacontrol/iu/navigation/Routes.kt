@@ -27,6 +27,11 @@ object Routes {
     const val REGISTRAR_TEMPERATURA_PARAM =
         "$REGISTRAR_TEMPERATURA/{lineaId}"
 
+    // Historial de temperaturas
+    const val HISTORIAL_TEMPERATURAS = "historialTemperaturas"
+    const val HISTORIAL_TEMPERATURAS_PARAM =
+        "$HISTORIAL_TEMPERATURAS/{lineaId}"
+
     // Alertas
     const val ALERTAS = "alertas"
 

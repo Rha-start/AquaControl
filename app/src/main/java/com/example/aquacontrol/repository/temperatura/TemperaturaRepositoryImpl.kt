@@ -3,6 +3,7 @@ package com.example.aquacontrol.repository.temperatura
 import android.util.Log
 import com.example.aquacontrol.data.temperatura.local.MedicionTemperaturaEntity
 import com.example.aquacontrol.data.temperatura.local.TemperaturaLocalDataSource
+import com.example.aquacontrol.model.temperatura.FiltroHistorialTemperatura
 import com.example.aquacontrol.model.temperatura.MedicionTemperatura
 import com.example.aquacontrol.model.temperatura.OrigenMedicion
 import com.example.aquacontrol.notificaciones.NotificadorAlertas
@@ -80,6 +81,36 @@ class TemperaturaRepositoryImpl(
             .map { mediciones ->
                 mediciones.map { it.toModelo() }
             }
+    }
+
+    override fun observarPaginaHistorial(
+        lineaId: Int,
+        filtro: FiltroHistorialTemperatura,
+        limite: Int,
+        desplazamiento: Int
+    ): Flow<List<MedicionTemperatura>> {
+        obtenerUbicacion(lineaId)
+
+        return localDataSource.observarPaginaHistorial(
+            lineaId = lineaId,
+            filtro = filtro,
+            limite = limite,
+            desplazamiento = desplazamiento
+        ).map { mediciones ->
+            mediciones.map { it.toModelo() }
+        }
+    }
+
+    override fun observarCantidadHistorial(
+        lineaId: Int,
+        filtro: FiltroHistorialTemperatura
+    ): Flow<Int> {
+        obtenerUbicacion(lineaId)
+
+        return localDataSource.observarCantidadHistorial(
+            lineaId = lineaId,
+            filtro = filtro
+        )
     }
 
     override fun observarUltimaMedicionPorLinea(

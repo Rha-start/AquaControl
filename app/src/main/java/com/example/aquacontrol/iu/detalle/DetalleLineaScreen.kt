@@ -8,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -25,12 +24,9 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.aquacontrol.iu.components.IndicadorEstado
 import com.example.aquacontrol.iu.navigation.Routes
-import com.example.aquacontrol.model.temperatura.OrigenMedicion
+import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaUiState
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun DetalleLineaScreen(
@@ -39,7 +35,7 @@ fun DetalleLineaScreen(
     viewModel: DetalleLineaViewModel
 ) {
     LaunchedEffect(lineaId, viewModel) {
-        viewModel.cargarHistorial(lineaId)
+        viewModel.cargarResumen(lineaId)
     }
 
     val estado by viewModel.uiState.collectAsState()
@@ -73,12 +69,13 @@ fun DetalleLineaScreen(
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             Text(
-                                text = "Detalle de ${actual.linea.nombre}",
+                                text = actual.linea.nombre,
                                 style = MaterialTheme.typography.headlineSmall
                             )
 
                             Text(
-                                text = "${actual.nombreGranja} · ${actual.nombreGalpon}",
+                                text = "${actual.nombreGranja} · " +
+                                        actual.nombreGalpon,
                                 style = MaterialTheme.typography.titleMedium
                             )
                         }
@@ -103,8 +100,7 @@ fun DetalleLineaScreen(
                                     IndicadorEstado(estado = null)
 
                                     Text(
-                                        text = "Todavía no se ha guardado una " +
-                                                "temperatura para esta línea.",
+                                        text = "Esta línea todavía no tiene mediciones.",
                                         style = MaterialTheme.typography.bodyLarge
                                     )
                                 } else {
@@ -118,17 +114,11 @@ fun DetalleLineaScreen(
                                     )
 
                                     Text(
-                                        text = "Origen: ${
-                                            nombreOrigenDetalle(medicion.origen)
-                                        }",
+                                        text = FechasHistorialTemperatura
+                                            .formatearFechaHora(
+                                                medicion.fechaHora
+                                            ),
                                         style = MaterialTheme.typography.bodyLarge
-                                    )
-
-                                    Text(
-                                        text = "Fecha y hora: ${
-                                            formatearFechaDetalle(medicion.fechaHora)
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }
@@ -139,7 +129,8 @@ fun DetalleLineaScreen(
                         Button(
                             onClick = {
                                 navController.navigate(
-                                    "${Routes.REGISTRAR_TEMPERATURA}/${actual.linea.id}"
+                                    "${Routes.REGISTRAR_TEMPERATURA}/" +
+                                            actual.linea.id
                                 ) {
                                     launchSingleTop = true
                                 }
@@ -156,7 +147,28 @@ fun DetalleLineaScreen(
                     }
 
                     item {
-                        Button(
+                        OutlinedButton(
+                            onClick = {
+                                navController.navigate(
+                                    "${Routes.HISTORIAL_TEMPERATURAS}/" +
+                                            actual.linea.id
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
+                        ) {
+                            Text(
+                                text = "Historial de temperaturas",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+
+                    item {
+                        OutlinedButton(
                             onClick = {
                                 navController.navigate(
                                     "${Routes.FLUSHING}/${actual.linea.id}"
@@ -164,69 +176,14 @@ fun DetalleLineaScreen(
                                     launchSingleTop = true
                                 }
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
-                            Text("Ver historial de flushing")
-                        }
-                    }
-
-                    item {
-                        Text(
-                            text = "Historial de temperaturas",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
-
-                    item {
-                        Text(
-                            text = "Mediciones guardadas: ${actual.historial.size}",
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    }
-
-                    if (actual.historial.isEmpty()) {
-                        item {
                             Text(
-                                text = "Esta línea todavía no tiene " +
-                                        "mediciones históricas registradas."
+                                text = "Historial de flushing",
+                                style = MaterialTheme.typography.bodyLarge
                             )
-                        }
-                    } else {
-                        items(
-                            items = actual.historial,
-                            key = { it.id }
-                        ) { registro ->
-                            Card(
-                                modifier = Modifier.fillMaxWidth()
-                            ) {
-                                Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                                ) {
-                                    Text(
-                                        text = "${registro.temperatura} °C",
-                                        style = MaterialTheme.typography.titleLarge
-                                    )
-
-                                    IndicadorEstado(
-                                        estado = registro.estado
-                                    )
-
-                                    Text(
-                                        text = "Origen: ${
-                                            nombreOrigenDetalle(registro.origen)
-                                        }",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-
-                                    Text(
-                                        text = "Fecha y hora: ${
-                                            formatearFechaDetalle(registro.fechaHora)
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-                            }
                         }
                     }
                 }
@@ -242,14 +199,15 @@ fun DetalleLineaScreen(
                     item {
                         Text(
                             text = actual.mensaje,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
 
                     item {
                         Button(
                             onClick = {
-                                viewModel.cargarHistorial(lineaId)
+                                viewModel.cargarResumen(lineaId)
                             },
                             modifier = Modifier.fillMaxWidth()
                         ) {
@@ -258,33 +216,6 @@ fun DetalleLineaScreen(
                     }
                 }
             }
-
-            item {
-                OutlinedButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Volver")
-                }
-            }
         }
     }
-}
-
-private fun nombreOrigenDetalle(origen: OrigenMedicion): String {
-    return when (origen) {
-        OrigenMedicion.MANUAL -> "Manual"
-        OrigenMedicion.SIMULADA -> "Simulada"
-    }
-}
-
-private fun formatearFechaDetalle(fechaHora: Long): String {
-    val formato = SimpleDateFormat(
-        "dd/MM/yyyy HH:mm:ss",
-        Locale.getDefault()
-    )
-
-    return formato.format(Date(fechaHora))
 }
