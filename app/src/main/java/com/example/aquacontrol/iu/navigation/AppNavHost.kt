@@ -33,6 +33,7 @@ import com.example.aquacontrol.iu.flushing.FlushingScreen
 import com.example.aquacontrol.iu.flushing.RegistrarFlushingScreen
 import com.example.aquacontrol.iu.galpones.GalponScreen
 import com.example.aquacontrol.iu.granjas.GranjaScreen
+import com.example.aquacontrol.iu.historial.HistorialTemperaturaScreen
 import com.example.aquacontrol.iu.lineas.LineaScreen
 import com.example.aquacontrol.iu.roles.OperarioScreen
 import com.example.aquacontrol.iu.roles.RolSelectionScreen
@@ -46,6 +47,7 @@ import com.example.aquacontrol.viewmodel.alertas.AlertasViewModel
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
 import com.example.aquacontrol.viewmodel.flushing.RegistrarFlushingViewModel
+import com.example.aquacontrol.viewmodel.historial.HistorialTemperaturaViewModel
 import com.example.aquacontrol.viewmodel.lineas.LineaViewModel
 import com.example.aquacontrol.viewmodel.perfil.PerfilViewModel
 import com.example.aquacontrol.viewmodel.simulacion.SimulacionViewModel
@@ -115,6 +117,14 @@ fun AppNavHost(
         }
     }
 
+    val historialTemperaturaFactory = remember(temperaturaRepository) {
+        viewModelFactory {
+            initializer {
+                HistorialTemperaturaViewModel(temperaturaRepository)
+            }
+        }
+    }
+
     val lineasFactory = remember(temperaturaRepository) {
         viewModelFactory {
             initializer {
@@ -147,7 +157,6 @@ fun AppNavHost(
         }
     }
 
-    // Una sola instancia de simulación para toda la actividad.
     val simulacionViewModel: SimulacionViewModel = viewModel(
         factory = simulacionFactory
     )
@@ -193,7 +202,7 @@ fun AppNavHost(
                 GranjaScreen(navController)
             }
 
-            // Galpones de la granja seleccionada
+            // Galpones
             composable(Routes.GALPONES_PARAM) { backStack ->
                 val granjaId = backStack.arguments
                     ?.getString("granjaId")
@@ -202,7 +211,7 @@ fun AppNavHost(
                 GalponScreen(navController, granjaId)
             }
 
-            // Líneas con sus últimas mediciones de Room
+            // Líneas
             composable(
                 route = Routes.LINEAS_PARAM,
                 arguments = listOf(
@@ -226,7 +235,7 @@ fun AppNavHost(
                 )
             }
 
-            // Detalle e historial térmico desde Room
+            // Detalle de línea
             composable(
                 route = Routes.DETALLE_LINEA_PARAM,
                 arguments = listOf(
@@ -250,7 +259,35 @@ fun AppNavHost(
                 )
             }
 
-            // Formulario de registro manual de temperatura
+            // Historial de temperaturas con filtros y paginación
+            composable(
+                route = Routes.HISTORIAL_TEMPERATURAS_PARAM,
+                arguments = listOf(
+                    navArgument("lineaId") {
+                        type = NavType.IntType
+                    }
+                )
+            ) { backStack ->
+                val lineaId = backStack.arguments
+                    ?.getInt("lineaId") ?: 0
+
+                if (lineaId <= 0) {
+                    Text("No se pudo identificar la línea.")
+                } else {
+                    val historialTemperaturaViewModel:
+                            HistorialTemperaturaViewModel = viewModel(
+                        viewModelStoreOwner = backStack,
+                        factory = historialTemperaturaFactory
+                    )
+
+                    HistorialTemperaturaScreen(
+                        lineaId = lineaId,
+                        viewModel = historialTemperaturaViewModel
+                    )
+                }
+            }
+
+            // Registro manual de temperatura
             composable(
                 route = Routes.REGISTRAR_TEMPERATURA_PARAM,
                 arguments = listOf(
@@ -281,7 +318,7 @@ fun AppNavHost(
                 }
             }
 
-            // Medición específica que originó una notificación
+            // Medición que originó una notificación
             composable(
                 route = DETALLE_ALERTA_PARAM,
                 arguments = listOf(
@@ -317,7 +354,7 @@ fun AppNavHost(
                 }
             }
 
-            // Historial de flushing por línea
+            // Historial de flushing
             composable(
                 route = Routes.FLUSHING_PARAM,
                 arguments = listOf(
@@ -347,7 +384,7 @@ fun AppNavHost(
                 }
             }
 
-            // Formulario de registro de flushing
+            // Registro de flushing
             composable(
                 route = "${Routes.REGISTRAR_FLUSHING}/{lineaId}",
                 arguments = listOf(
@@ -378,7 +415,7 @@ fun AppNavHost(
                 }
             }
 
-            // Detalle de un registro específico de flushing
+            // Detalle de un registro de flushing
             composable(
                 route = Routes.DETALLE_FLUSHING_PARAM,
                 arguments = listOf(
@@ -397,9 +434,7 @@ fun AppNavHost(
                     ?.getInt("eventoId") ?: 0
 
                 if (lineaId <= 0 || eventoId <= 0) {
-                    Text(
-                        "No se pudo identificar el registro de flushing."
-                    )
+                    Text("No se pudo identificar el registro de flushing.")
                 } else {
                     val detalleFlushingViewModel: FlushingViewModel =
                         viewModel(
@@ -416,7 +451,7 @@ fun AppNavHost(
                 }
             }
 
-            // Alertas calculadas con las últimas mediciones de Room
+            // Alertas actuales
             composable(Routes.ALERTAS) { backStack ->
                 val alertasViewModel: AlertasViewModel = viewModel(
                     viewModelStoreOwner = backStack,
@@ -434,7 +469,7 @@ fun AppNavHost(
                 FlushingHomeScreen(navController)
             }
 
-            // Simulación compartida entre pantallas
+            // Simulación compartida
             composable(Routes.SIMULACION) {
                 SimulacionScreen(
                     navController = navController,
