@@ -145,16 +145,6 @@ fun AlertasScreen(
                 }
             }
 
-            item {
-                OutlinedButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Volver")
-                }
-            }
         }
     }
 }

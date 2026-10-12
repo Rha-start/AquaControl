@@ -146,12 +146,6 @@ fun FlushingDetalleScreen(
                 }
             }
 
-            OutlinedButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver al historial")
-            }
         }
     }
 }

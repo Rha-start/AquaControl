@@ -307,14 +307,6 @@ fun SimulacionScreen(
                 Text("Ver alertas")
             }
 
-            OutlinedButton(
-                onClick = {
-                    navController.popBackStack()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver")
-            }
         }
     }
 }

@@ -204,22 +204,6 @@ fun RegistrarTemperaturaScreen(
                 }
             }
 
-            OutlinedButton(
-                onClick = { navController.popBackStack() },
-                enabled = !estado.guardando,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-            ) {
-                Text(
-                    text = if (registrado) {
-                        "Volver al detalle de la línea"
-                    } else {
-                        "Volver"
-                    },
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
         }
     }
 }

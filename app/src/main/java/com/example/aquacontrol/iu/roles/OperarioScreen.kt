@@ -140,14 +140,6 @@ fun OperarioScreen(
                 Text("Simulación de temperaturas")
             }
 
-            OutlinedButton(
-                onClick = {
-                    navController.popBackStack()
-                },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver")
-            }
         }
     }
 }
