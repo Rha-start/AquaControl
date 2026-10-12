@@ -51,6 +51,7 @@ import com.example.aquacontrol.viewmodel.historial.HistorialTemperaturaViewModel
 import com.example.aquacontrol.viewmodel.lineas.LineaViewModel
 import com.example.aquacontrol.viewmodel.perfil.PerfilViewModel
 import com.example.aquacontrol.viewmodel.simulacion.SimulacionViewModel
+import com.example.aquacontrol.viewmodel.supervisor.SupervisorViewModel
 import com.example.aquacontrol.viewmodel.temperatura.RegistrarTemperaturaViewModel
 
 private const val DETALLE_ALERTA = "detalleAlerta"
@@ -149,6 +150,14 @@ fun AppNavHost(
         }
     }
 
+    val supervisorFactory = remember(temperaturaRepository) {
+        viewModelFactory {
+            initializer {
+                SupervisorViewModel(temperaturaRepository)
+            }
+        }
+    }
+
     val simulacionFactory = remember(temperaturaRepository) {
         viewModelFactory {
             initializer {
@@ -193,8 +202,17 @@ fun AppNavHost(
                 OperarioScreen(navController, perfilViewModel)
             }
 
-            composable(Routes.SUPERVISOR_HOME) {
-                SupervisorScreen(navController, perfilViewModel)
+            composable(Routes.SUPERVISOR_HOME) { backStack ->
+                val supervisorViewModel: SupervisorViewModel = viewModel(
+                    viewModelStoreOwner = backStack,
+                    factory = supervisorFactory
+                )
+
+                SupervisorScreen(
+                    navController = navController,
+                    perfilViewModel = perfilViewModel,
+                    viewModel = supervisorViewModel
+                )
             }
 
             // Granjas
