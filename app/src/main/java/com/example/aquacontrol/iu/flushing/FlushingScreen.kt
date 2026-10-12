@@ -20,12 +20,18 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
 import com.example.aquacontrol.iu.navigation.Routes
+import com.example.aquacontrol.model.flushing.EventoFlushing
+import com.example.aquacontrol.model.flushing.FechasCalendarioFlushing
 import com.example.aquacontrol.viewmodel.flushing.FlushingUiState
 import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
 
@@ -37,6 +43,34 @@ fun FlushingScreen(
 ) {
     val estado by viewModel.uiState.collectAsState()
     val backStackEntry = navController.currentBackStackEntry
+
+    var mesVisible by rememberSaveable(lineaId) {
+        mutableStateOf(
+            FechasCalendarioFlushing.inicioMes(
+                FechasCalendarioFlushing.hoy()
+            )
+        )
+    }
+
+    var diaSeleccionado by rememberSaveable(lineaId) {
+        mutableStateOf<Long?>(FechasCalendarioFlushing.hoy())
+    }
+
+    val eventos = (estado as? FlushingUiState.Success)
+        ?.eventos.orEmpty()
+
+    val eventosPorDia = remember(eventos) {
+        eventos.groupBy { evento ->
+            FechasCalendarioFlushing.diaDelRegistro(evento.fechaHora)
+        }
+    }
+
+    val diasConEventos = remember(eventosPorDia) {
+        eventosPorDia.keys.filterNotNull().toSet()
+    }
+
+    val eventosDelDia = eventosPorDia[diaSeleccionado].orEmpty()
+    val eventosSinFecha = eventosPorDia[null].orEmpty()
 
     DisposableEffect(backStackEntry, lineaId, viewModel) {
         val lifecycle = backStackEntry?.lifecycle
@@ -63,10 +97,8 @@ fun FlushingScreen(
         color = MaterialTheme.colorScheme.background
     ) {
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            contentPadding = PaddingValues(vertical = 16.dp),
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             item {
@@ -104,72 +136,6 @@ fun FlushingScreen(
                     }
                 }
 
-                is FlushingUiState.Success -> {
-                    items(
-                        items = actual.eventos,
-                        key = { evento -> evento.id }
-                    ) { evento ->
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Text(
-                                    text = evento.fechaHora,
-                                    style = MaterialTheme.typography.titleMedium
-                                )
-
-                                Text(
-                                    text = "Antes: ${evento.temperaturaAntes} °C",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-
-                                Text(
-                                    text = "Después: ${evento.temperaturaDespues} °C",
-                                    style = MaterialTheme.typography.bodyLarge
-                                )
-
-                                if (!evento.fotoRuta.isNullOrBlank()) {
-                                    Text(
-                                        text = "Con foto de evidencia",
-                                        style = MaterialTheme.typography.bodyMedium
-                                    )
-                                }
-
-                                OutlinedButton(
-                                    onClick = {
-                                        navController.navigate(
-                                            "${Routes.DETALLE_FLUSHING}/" +
-                                                    "${evento.lineaId}/${evento.id}"
-                                        ) {
-                                            launchSingleTop = true
-                                        }
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .heightIn(min = 48.dp)
-                                ) {
-                                    Text(
-                                        text = "Ver detalle",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                FlushingUiState.Empty -> {
-                    item {
-                        Text(
-                            text = "Esta línea todavía no tiene registros de flushing.",
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
-
                 is FlushingUiState.Error -> {
                     item {
                         Column(
@@ -192,17 +158,162 @@ fun FlushingScreen(
                         }
                     }
                 }
+
+                FlushingUiState.Empty,
+                is FlushingUiState.Success -> {
+                    item {
+                        CalendarioFlushing(
+                            mesVisible = mesVisible,
+                            diaSeleccionado = diaSeleccionado,
+                            diasConEventos = diasConEventos,
+                            onCambiarMes = { nuevoMes ->
+                                mesVisible = nuevoMes
+                                diaSeleccionado = null
+                            },
+                            onSeleccionarDia = { dia ->
+                                diaSeleccionado = dia
+                            }
+                        )
+                    }
+
+                    item {
+                        val dia = diaSeleccionado
+
+                        if (dia == null) {
+                            Text(
+                                text = "Selecciona un día del calendario.",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        } else {
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                Text(
+                                    text = "Flushing del " +
+                                            FechasCalendarioFlushing
+                                                .tituloDia(dia),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+
+                                if (eventosDelDia.isEmpty()) {
+                                    Text(
+                                        text = if (actual is FlushingUiState.Empty) {
+                                            "Esta línea todavía no tiene registros de flushing."
+                                        } else {
+                                            "No hay registros para este día."
+                                        },
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                } else {
+                                    Text(
+                                        text = if (eventosDelDia.size == 1) {
+                                            "1 registro"
+                                        } else {
+                                            "${eventosDelDia.size} registros"
+                                        },
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    if (diaSeleccionado != null) {
+                        items(
+                            items = eventosDelDia,
+                            key = { evento -> evento.id }
+                        ) { evento ->
+                            RegistroFlushingCalendario(
+                                evento = evento,
+                                onVerDetalle = {
+                                    navController.navigate(
+                                        "${Routes.DETALLE_FLUSHING}/" +
+                                                "${evento.lineaId}/${evento.id}"
+                                    ) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            )
+                        }
+                    }
+
+                    // Conserva el acceso a registros antiguos si su fecha
+                    // no coincide con el formato utilizado actualmente.
+                    if (eventosSinFecha.isNotEmpty()) {
+                        item {
+                            Text(
+                                text = "Registros con fecha no reconocida",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+
+                        items(
+                            items = eventosSinFecha,
+                            key = { evento -> "sinFecha_${evento.id}" }
+                        ) { evento ->
+                            RegistroFlushingCalendario(
+                                evento = evento,
+                                onVerDetalle = {
+                                    navController.navigate(
+                                        "${Routes.DETALLE_FLUSHING}/" +
+                                                "${evento.lineaId}/${evento.id}"
+                                    ) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun RegistroFlushingCalendario(
+    evento: EventoFlushing,
+    onVerDetalle: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth()
+    ) {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Text(
+                text = evento.fechaHora,
+                style = MaterialTheme.typography.titleMedium
+            )
+
+            Text(
+                text = "Antes: ${evento.temperaturaAntes} °C",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            Text(
+                text = "Después: ${evento.temperaturaDespues} °C",
+                style = MaterialTheme.typography.bodyLarge
+            )
+
+            if (!evento.fotoRuta.isNullOrBlank()) {
+                Text(
+                    text = "Con foto de evidencia",
+                    style = MaterialTheme.typography.bodyMedium
+                )
             }
 
-            item {
-                OutlinedButton(
-                    onClick = {
-                        navController.popBackStack()
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Volver")
-                }
+            OutlinedButton(
+                onClick = onVerDetalle,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 48.dp)
+            ) {
+                Text(
+                    text = "Ver detalle",
+                    style = MaterialTheme.typography.bodyLarge
+                )
             }
         }
     }

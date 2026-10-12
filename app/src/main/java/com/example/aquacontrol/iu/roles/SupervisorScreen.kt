@@ -90,13 +90,5 @@ fun SupervisorScreen(
 
         Spacer(Modifier.height(24.dp))
 
-        // Botón: Volver
-        Button(
-            onClick = { navController.popBackStack() },
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(containerColor = GrisTexto)
-        ) {
-            Text("Volver", color = Color.White)
-        }
     }
 }

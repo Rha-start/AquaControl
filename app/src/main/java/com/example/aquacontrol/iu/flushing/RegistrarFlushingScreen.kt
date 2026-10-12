@@ -351,13 +351,6 @@ fun RegistrarFlushingScreen(
                 }
             }
 
-            OutlinedButton(
-                onClick = { navController.popBackStack() },
-                enabled = !estado.guardando && !capturando,
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver")
-            }
         }
     }
 }

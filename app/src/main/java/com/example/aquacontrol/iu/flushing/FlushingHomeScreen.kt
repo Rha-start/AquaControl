@@ -148,12 +148,6 @@ fun FlushingHomeScreen(
                 Text("Continuar al registro")
             }
 
-            OutlinedButton(
-                onClick = { navController.popBackStack() },
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                Text("Volver")
-            }
         }
     }
 }
