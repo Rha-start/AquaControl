@@ -3,12 +3,7 @@ package com.example.aquacontrol.iu.navigation
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.Lifecycle
@@ -43,10 +38,10 @@ import com.example.aquacontrol.iu.roles.SupervisorScreen
 import com.example.aquacontrol.iu.simulacion.SimulacionScreen
 import com.example.aquacontrol.iu.temperatura.RegistrarTemperaturaScreen
 import com.example.aquacontrol.model.estado.EstadoLinea
-import com.example.aquacontrol.viewmodel.alertas.AlertasUiState
 import com.example.aquacontrol.notificaciones.NotificadorAlertas
 import com.example.aquacontrol.repository.flushing.FlushingRepositoryImpl
 import com.example.aquacontrol.repository.temperatura.TemperaturaRepositoryImpl
+import com.example.aquacontrol.viewmodel.alertas.AlertasUiState
 import com.example.aquacontrol.viewmodel.alertas.AlertasViewModel
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
@@ -60,8 +55,7 @@ import com.example.aquacontrol.viewmodel.supervisor.SupervisorViewModel
 import com.example.aquacontrol.viewmodel.temperatura.RegistrarTemperaturaViewModel
 
 private const val DETALLE_ALERTA = "detalleAlerta"
-private const val DETALLE_ALERTA_PARAM =
-    "$DETALLE_ALERTA/{lineaId}/{medicionId}"
+private const val DETALLE_ALERTA_PARAM = "$DETALLE_ALERTA/{lineaId}/{medicionId}"
 
 @Composable
 fun AppNavHost(
@@ -86,122 +80,67 @@ fun AppNavHost(
     }
 
     val notificadorAlertas = remember(appContext) {
-        NotificadorAlertas(appContext).also {
-            it.crearCanales()
-        }
+        NotificadorAlertas(appContext).also { it.crearCanales() }
     }
 
     val temperaturaRepository = remember(database, notificadorAlertas) {
         TemperaturaRepositoryImpl(
-            localDataSource = TemperaturaLocalDataSource(
-                database.medicionTemperaturaDao()
-            ),
+            localDataSource = TemperaturaLocalDataSource(database.medicionTemperaturaDao()),
             notificadorAlertas = notificadorAlertas
         )
     }
 
     val historialFactory = remember(flushingRepository) {
-        viewModelFactory {
-            initializer {
-                FlushingViewModel(flushingRepository)
-            }
-        }
+        viewModelFactory { initializer { FlushingViewModel(flushingRepository) } }
     }
 
     val registroFactory = remember(flushingRepository) {
-        viewModelFactory {
-            initializer {
-                RegistrarFlushingViewModel(flushingRepository)
-            }
-        }
+        viewModelFactory { initializer { RegistrarFlushingViewModel(flushingRepository) } }
     }
 
     val registroTemperaturaFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                RegistrarTemperaturaViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { RegistrarTemperaturaViewModel(temperaturaRepository) } }
     }
 
     val historialTemperaturaFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                HistorialTemperaturaViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { HistorialTemperaturaViewModel(temperaturaRepository) } }
     }
 
     val galponesFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                GalponViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { GalponViewModel(temperaturaRepository) } }
     }
 
     val lineasFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                LineaViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { LineaViewModel(temperaturaRepository) } }
     }
 
     val detalleFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                DetalleLineaViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { DetalleLineaViewModel(temperaturaRepository) } }
     }
 
     val alertasFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                AlertasViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { AlertasViewModel(temperaturaRepository) } }
     }
 
-    val alertasViewModel: AlertasViewModel = viewModel(
-        factory = alertasFactory
-    )
+    val alertasViewModel: AlertasViewModel = viewModel(factory = alertasFactory)
     val estadoAlertas by alertasViewModel.uiState.collectAsState()
-    val alertasActuales = (estadoAlertas as? AlertasUiState.Success)
-        ?.alertas.orEmpty()
-    val cantidadCriticas = alertasActuales.count {
-        it.medicion.estado == EstadoLinea.CRITICO
-    }
-    val cantidadAdvertencias = alertasActuales.count {
-        it.medicion.estado == EstadoLinea.ADVERTENCIA
-    }
+    val alertasActuales = (estadoAlertas as? AlertasUiState.Success)?.alertas.orEmpty()
+    val cantidadCriticas = alertasActuales.count { it.medicion.estado == EstadoLinea.CRITICO }
+    val cantidadAdvertencias = alertasActuales.count { it.medicion.estado == EstadoLinea.ADVERTENCIA }
 
     val supervisorFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                SupervisorViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { SupervisorViewModel(temperaturaRepository) } }
     }
 
     val simulacionFactory = remember(temperaturaRepository) {
-        viewModelFactory {
-            initializer {
-                SimulacionViewModel(temperaturaRepository)
-            }
-        }
+        viewModelFactory { initializer { SimulacionViewModel(temperaturaRepository) } }
     }
 
-    val simulacionViewModel: SimulacionViewModel = viewModel(
-        factory = simulacionFactory
-    )
+    val simulacionViewModel: SimulacionViewModel = viewModel(factory = simulacionFactory)
 
     DisposableEffect(lifecycleOwner, simulacionViewModel) {
         val observer = LifecycleEventObserver { _, event ->
-            if (event == Lifecycle.Event.ON_STOP) {
-                simulacionViewModel.detener()
-            }
+            if (event == Lifecycle.Event.ON_STOP) simulacionViewModel.detener()
         }
 
         lifecycleOwner.lifecycle.addObserver(observer)
@@ -227,6 +166,7 @@ fun AppNavHost(
             startDestination = Routes.ROLE_SELECTION,
             modifier = Modifier.padding(innerPadding)
         ) {
+
             // Roles
             composable(Routes.ROLE_SELECTION) {
                 RolSelectionScreen(navController, perfilViewModel)
@@ -242,11 +182,7 @@ fun AppNavHost(
                     factory = supervisorFactory
                 )
 
-                SupervisorScreen(
-                    navController = navController,
-                    perfilViewModel = perfilViewModel,
-                    viewModel = supervisorViewModel
-                )
+                SupervisorScreen(navController, perfilViewModel, supervisorViewModel)
             }
 
             // Granjas
@@ -256,126 +192,77 @@ fun AppNavHost(
 
             // Galpones
             composable(Routes.GALPONES_PARAM) { backStack ->
-                val granjaId = backStack.arguments
-                    ?.getString("granjaId")
-                    ?.toIntOrNull() ?: 0
+                val granjaId = backStack.arguments?.getString("granjaId")?.toIntOrNull() ?: 0
 
                 val galponesViewModel: GalponViewModel = viewModel(
                     viewModelStoreOwner = backStack,
                     factory = galponesFactory
                 )
 
-                GalponScreen(
-                    navController = navController,
-                    granjaId = granjaId,
-                    viewModel = galponesViewModel
-                )
+                GalponScreen(navController, granjaId, galponesViewModel)
             }
 
             // Líneas
             composable(
                 route = Routes.LINEAS_PARAM,
-                arguments = listOf(
-                    navArgument("galponId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("galponId") { type = NavType.IntType })
             ) { backStack ->
-                val galponId = backStack.arguments
-                    ?.getInt("galponId") ?: 0
+                val galponId = backStack.arguments?.getInt("galponId") ?: 0
 
                 val lineasViewModel: LineaViewModel = viewModel(
                     viewModelStoreOwner = backStack,
                     factory = lineasFactory
                 )
 
-                LineaScreen(
-                    navController = navController,
-                    galponId = galponId,
-                    viewModel = lineasViewModel
-                )
+                LineaScreen(navController, galponId, lineasViewModel)
             }
 
             // Detalle de línea
             composable(
                 route = Routes.DETALLE_LINEA_PARAM,
-                arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("lineaId") { type = NavType.IntType })
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
 
                 val detalleViewModel: DetalleLineaViewModel = viewModel(
                     viewModelStoreOwner = backStack,
                     factory = detalleFactory
                 )
 
-                DetalleLineaScreen(
-                    navController = navController,
-                    lineaId = lineaId,
-                    viewModel = detalleViewModel
-                )
+                DetalleLineaScreen(navController, lineaId, detalleViewModel)
             }
 
-            // Historial de temperaturas con filtros y paginación
+            // Historial de temperaturas
             composable(
                 route = Routes.HISTORIAL_TEMPERATURAS_PARAM,
-                arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("lineaId") { type = NavType.IntType })
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
 
                 if (lineaId <= 0) {
                     Text("No se pudo identificar la línea.")
                 } else {
-                    val historialTemperaturaViewModel:
-                            HistorialTemperaturaViewModel = viewModel(
-                        viewModelStoreOwner = backStack,
-                        factory = historialTemperaturaFactory
-                    )
+                    val historialTemperaturaViewModel: HistorialTemperaturaViewModel =
+                        viewModel(viewModelStoreOwner = backStack, factory = historialTemperaturaFactory)
 
-                    HistorialTemperaturaScreen(
-                        lineaId = lineaId,
-                        viewModel = historialTemperaturaViewModel
-                    )
+                    HistorialTemperaturaScreen(lineaId, historialTemperaturaViewModel)
                 }
             }
 
             // Registro manual de temperatura
             composable(
                 route = Routes.REGISTRAR_TEMPERATURA_PARAM,
-                arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("lineaId") { type = NavType.IntType })
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
 
                 if (lineaId <= 0) {
-                    Text(
-                        "No se pudo identificar la línea. Vuelve y selecciónala."
-                    )
+                    Text("No se pudo identificar la línea. Vuelve y selecciónala.")
                 } else {
-                    val registroTemperaturaViewModel:
-                            RegistrarTemperaturaViewModel = viewModel(
-                        viewModelStoreOwner = backStack,
-                        factory = registroTemperaturaFactory
-                    )
+                    val registroTemperaturaViewModel: RegistrarTemperaturaViewModel =
+                        viewModel(viewModelStoreOwner = backStack, factory = registroTemperaturaFactory)
 
-                    RegistrarTemperaturaScreen(
-                        navController = navController,
-                        lineaId = lineaId,
-                        viewModel = registroTemperaturaViewModel
-                    )
+                    RegistrarTemperaturaScreen(navController, lineaId, registroTemperaturaViewModel)
                 }
             }
 
@@ -383,142 +270,81 @@ fun AppNavHost(
             composable(
                 route = DETALLE_ALERTA_PARAM,
                 arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    },
-                    navArgument("medicionId") {
-                        type = NavType.LongType
-                    }
+                    navArgument("lineaId") { type = NavType.IntType },
+                    navArgument("medicionId") { type = NavType.LongType }
                 )
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
-
-                val medicionId = backStack.arguments
-                    ?.getLong("medicionId") ?: 0L
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
+                val medicionId = backStack.arguments?.getLong("medicionId") ?: 0L
 
                 if (lineaId <= 0 || medicionId <= 0L) {
                     Text("No se pudo identificar la alerta.")
                 } else {
                     val detalleAlertaViewModel: DetalleLineaViewModel =
-                        viewModel(
-                            viewModelStoreOwner = backStack,
-                            factory = detalleFactory
-                        )
+                        viewModel(viewModelStoreOwner = backStack, factory = detalleFactory)
 
-                    DetalleAlertaScreen(
-                        navController = navController,
-                        lineaId = lineaId,
-                        medicionId = medicionId,
-                        viewModel = detalleAlertaViewModel
-                    )
+                    DetalleAlertaScreen(navController, lineaId, medicionId, detalleAlertaViewModel)
                 }
             }
 
             // Historial de flushing
             composable(
                 route = Routes.FLUSHING_PARAM,
-                arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("lineaId") { type = NavType.IntType })
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
 
                 if (lineaId <= 0) {
-                    Text(
-                        "No se pudo identificar la línea. Vuelve y selecciónala."
-                    )
+                    Text("No se pudo identificar la línea. Vuelve y selecciónala.")
                 } else {
-                    val historialViewModel: FlushingViewModel = viewModel(
-                        viewModelStoreOwner = backStack,
-                        factory = historialFactory
-                    )
+                    val historialViewModel: FlushingViewModel =
+                        viewModel(viewModelStoreOwner = backStack, factory = historialFactory)
 
-                    FlushingScreen(
-                        navController = navController,
-                        lineaId = lineaId,
-                        viewModel = historialViewModel
-                    )
+                    FlushingScreen(navController, lineaId, historialViewModel)
                 }
             }
 
             // Registro de flushing
             composable(
                 route = "${Routes.REGISTRAR_FLUSHING}/{lineaId}",
-                arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    }
-                )
+                arguments = listOf(navArgument("lineaId") { type = NavType.IntType })
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
 
                 if (lineaId <= 0) {
-                    Text(
-                        "No se pudo identificar la línea. Vuelve y selecciónala."
-                    )
+                    Text("No se pudo identificar la línea. Vuelve y selecciónala.")
                 } else {
                     val registroViewModel: RegistrarFlushingViewModel =
-                        viewModel(
-                            viewModelStoreOwner = backStack,
-                            factory = registroFactory
-                        )
+                        viewModel(viewModelStoreOwner = backStack, factory = registroFactory)
 
-                    RegistrarFlushingScreen(
-                        navController = navController,
-                        lineaId = lineaId,
-                        viewModel = registroViewModel
-                    )
+                    RegistrarFlushingScreen(navController, lineaId, registroViewModel)
                 }
             }
 
-            // Detalle de un registro de flushing
+            // Detalle de flushing
             composable(
                 route = Routes.DETALLE_FLUSHING_PARAM,
                 arguments = listOf(
-                    navArgument("lineaId") {
-                        type = NavType.IntType
-                    },
-                    navArgument("eventoId") {
-                        type = NavType.IntType
-                    }
+                    navArgument("lineaId") { type = NavType.IntType },
+                    navArgument("eventoId") { type = NavType.IntType }
                 )
             ) { backStack ->
-                val lineaId = backStack.arguments
-                    ?.getInt("lineaId") ?: 0
-
-                val eventoId = backStack.arguments
-                    ?.getInt("eventoId") ?: 0
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
+                val eventoId = backStack.arguments?.getInt("eventoId") ?: 0
 
                 if (lineaId <= 0 || eventoId <= 0) {
                     Text("No se pudo identificar el registro de flushing.")
                 } else {
                     val detalleFlushingViewModel: FlushingViewModel =
-                        viewModel(
-                            viewModelStoreOwner = backStack,
-                            factory = historialFactory
-                        )
+                        viewModel(viewModelStoreOwner = backStack, factory = historialFactory)
 
-                    FlushingDetalleScreen(
-                        navController = navController,
-                        lineaId = lineaId,
-                        eventoId = eventoId,
-                        viewModel = detalleFlushingViewModel
-                    )
+                    FlushingDetalleScreen(navController, lineaId, eventoId, detalleFlushingViewModel)
                 }
             }
 
-            // Alertas actuales
+            // Alertas
             composable(Routes.ALERTAS) {
-
-                AlertasScreen(
-                    navController = navController,
-                    viewModel = alertasViewModel
-                )
+                AlertasScreen(navController, alertasViewModel)
             }
 
             // Selección para registrar flushing
@@ -526,35 +352,21 @@ fun AppNavHost(
                 FlushingHomeScreen(navController)
             }
 
-            // Simulación compartida
+            // Simulación
             composable(Routes.SIMULACION) {
-                SimulacionScreen(
-                    navController = navController,
-                    viewModel = simulacionViewModel
-                )
+                SimulacionScreen(navController, simulacionViewModel)
             }
         }
     }
 
-    LaunchedEffect(
-        lineaIdNotificacion,
-        medicionIdNotificacion
-    ) {
+    LaunchedEffect(lineaIdNotificacion, medicionIdNotificacion) {
         val lineaId = lineaIdNotificacion
         val medicionId = medicionIdNotificacion
 
-        if (
-            lineaId != null &&
-            medicionId != null &&
-            lineaId > 0 &&
-            medicionId > 0L
-        ) {
-            navController.navigate(
-                "$DETALLE_ALERTA/$lineaId/$medicionId"
-            ) {
+        if (lineaId != null && medicionId != null && lineaId > 0 && medicionId > 0L) {
+            navController.navigate("$DETALLE_ALERTA/$lineaId/$medicionId") {
                 launchSingleTop = true
             }
-
             onNotificacionAbierta()
         }
     }
