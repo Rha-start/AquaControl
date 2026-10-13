@@ -1,5 +1,12 @@
 package com.example.aquacontrol.iu.simulacion
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -25,6 +32,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.ui.theme.Navy
 import com.example.aquacontrol.iu.navigation.Routes
 import com.example.aquacontrol.model.simulacion.EscenarioSimulacion
 import com.example.aquacontrol.viewmodel.simulacion.SimulacionViewModel
@@ -59,25 +68,31 @@ fun SimulacionScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
+                .padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            Text(
-                text = "Simulación de temperaturas",
-                style = MaterialTheme.typography.headlineSmall
+            AquaEncabezado(
+                titulo = "Simulación",
+                subtitulo = "Temperaturas de demostración"
             )
 
             Text(
-                text = "Genera mediciones de demostración. " +
-                        "No corresponden a lecturas de sensores reales.",
+                text = "Genera registros simulados en el historial; no son lecturas de sensores.",
                 style = MaterialTheme.typography.bodyLarge
             )
 
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Navy.copy(alpha = 0.08f)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = Navy
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     Text(
@@ -111,17 +126,7 @@ fun SimulacionScreen(
             }
 
             Text(
-                text = "Cada línea evoluciona de forma independiente, " +
-                        "con cambios graduales y episodios aleatorios. " +
-                        "Se guarda una lectura por línea aproximadamente " +
-                        "cada cinco segundos.",
-                style = MaterialTheme.typography.bodyMedium
-            )
-
-            Text(
-                text = "Cada inicio reinicia la secuencia y el contador. " +
-                        "Las mediciones anteriores permanecen en el historial. " +
-                        "La simulación se detiene al pasar la app a segundo plano.",
+                text = "Se detiene al salir de la app. Cada inicio reinicia el contador, pero conserva el historial.",
                 style = MaterialTheme.typography.bodyMedium
             )
 
@@ -136,7 +141,9 @@ fun SimulacionScreen(
             Button(
                 onClick = viewModel::iniciar,
                 enabled = !estado.activa,
-                modifier = Modifier.fillMaxWidth()
+                shape = RoundedCornerShape(14.dp),
+                elevation = ButtonDefaults.buttonElevation(4.dp, 1.dp),
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
             ) {
                 Text("Iniciar simulación")
             }
@@ -144,16 +151,23 @@ fun SimulacionScreen(
             OutlinedButton(
                 onClick = viewModel::detener,
                 enabled = estado.activa,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
             ) {
                 Text("Detener simulación")
             }
 
             Card(
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Navy.copy(alpha = 0.08f)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = Navy
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
             ) {
                 Column(
-                    modifier = Modifier.padding(16.dp),
+                    modifier = Modifier.padding(20.dp),
                     verticalArrangement = Arrangement.spacedBy(12.dp)
                 ) {
                     Text(
@@ -172,14 +186,14 @@ fun SimulacionScreen(
                     )
 
                     Box(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                     ) {
                         OutlinedButton(
                             onClick = {
                                 menuLineasAbierto = true
                             },
                             enabled = estado.lineas.isNotEmpty(),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                         ) {
                             Text(
                                 text = if (lineaSeleccionada == null) {
@@ -192,27 +206,19 @@ fun SimulacionScreen(
                             )
                         }
 
-                        DropdownMenu(
-                            expanded = menuLineasAbierto,
-                            onDismissRequest = {
-                                menuLineasAbierto = false
-                            }
-                        ) {
-                            estado.lineas.forEach { linea ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = "${linea.nombreGranja} · " +
-                                                    "${linea.nombreGalpon} · " +
-                                                    linea.nombreLinea
-                                        )
-                                    },
-                                    onClick = {
-                                        menuLineasAbierto = false
-                                        viewModel.seleccionarLinea(linea.id)
-                                    }
-                                )
-                            }
+                        if (menuLineasAbierto) {
+                            SelectorSimulacion(
+                                titulo = "Seleccionar línea",
+                                opciones = estado.lineas.map { linea ->
+                                    linea.id.toString() to
+                                            "${linea.nombreGranja} · ${linea.nombreGalpon} · ${linea.nombreLinea}"
+                                },
+                                onCerrar = { menuLineasAbierto = false },
+                                onSeleccionar = { id ->
+                                    menuLineasAbierto = false
+                                    viewModel.seleccionarLinea(id.toInt())
+                                }
+                            )
                         }
                     }
 
@@ -222,13 +228,13 @@ fun SimulacionScreen(
                     )
 
                     Box(
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                     ) {
                         OutlinedButton(
                             onClick = {
                                 menuEscenariosAbierto = true
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                         ) {
                             Text(
                                 text = nombreEscenarioSimulacion(
@@ -237,35 +243,25 @@ fun SimulacionScreen(
                             )
                         }
 
-                        DropdownMenu(
-                            expanded = menuEscenariosAbierto,
-                            onDismissRequest = {
-                                menuEscenariosAbierto = false
-                            }
-                        ) {
-                            EscenarioSimulacion.entries.forEach { escenario ->
-                                DropdownMenuItem(
-                                    text = {
-                                        Text(
-                                            text = nombreEscenarioSimulacion(
-                                                escenario
-                                            )
-                                        )
-                                    },
-                                    onClick = {
-                                        menuEscenariosAbierto = false
-                                        viewModel.seleccionarEscenario(escenario)
-                                    }
-                                )
-                            }
+                        if (menuEscenariosAbierto) {
+                            SelectorSimulacion(
+                                titulo = "Seleccionar escenario",
+                                opciones = EscenarioSimulacion.entries.map {
+                                    it.name to nombreEscenarioSimulacion(it)
+                                },
+                                onCerrar = { menuEscenariosAbierto = false },
+                                onSeleccionar = { nombre ->
+                                    menuEscenariosAbierto = false
+                                    viewModel.seleccionarEscenario(
+                                        EscenarioSimulacion.valueOf(nombre)
+                                    )
+                                }
+                            )
                         }
                     }
 
                     Text(
-                        text = "La temperatura avanzará gradualmente hacia " +
-                                "el escenario elegido. Al terminar ese episodio, " +
-                                "la línea continuará automáticamente; los episodios " +
-                                "críticos pasan primero por recuperación.",
+                        text = "El cambio es gradual. Después, la línea continúa automáticamente.",
                         style = MaterialTheme.typography.bodyMedium
                     )
 
@@ -282,7 +278,9 @@ fun SimulacionScreen(
                     Button(
                         onClick = viewModel::aplicarEscenario,
                         enabled = estado.puedeAplicarEscenario,
-                        modifier = Modifier.fillMaxWidth()
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(4.dp, 1.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
                     ) {
                         Text("Aplicar escenario")
                     }
@@ -302,7 +300,7 @@ fun SimulacionScreen(
                         launchSingleTop = true
                     }
                 },
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
             ) {
                 Text("Ver alertas")
             }
@@ -331,4 +329,41 @@ private fun formatearFechaSimulacion(fechaHora: Long): String {
     )
 
     return formato.format(Date(fechaHora))
+}
+@Composable
+private fun SelectorSimulacion(
+    titulo: String,
+    opciones: List<Pair<String, String>>,
+    onCerrar: () -> Unit,
+    onSeleccionar: (String) -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onCerrar,
+        containerColor = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(24.dp),
+        title = {
+            Text(titulo, color = Navy)
+        },
+        text = {
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth().heightIn(max = 360.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(opciones, key = { it.first }) { (id, nombre) ->
+                    OutlinedButton(
+                        onClick = { onSeleccionar(id) },
+                        shape = RoundedCornerShape(12.dp),
+                        modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
+                    ) {
+                        Text(nombre, style = MaterialTheme.typography.bodyLarge)
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onCerrar) {
+                Text("Cancelar")
+            }
+        }
+    )
 }

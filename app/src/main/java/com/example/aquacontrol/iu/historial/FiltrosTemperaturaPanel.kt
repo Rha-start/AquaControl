@@ -1,5 +1,7 @@
 package com.example.aquacontrol.iu.historial
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,8 +17,12 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import com.example.aquacontrol.ui.theme.Navy
+import com.example.aquacontrol.ui.theme.Paper
+import com.example.aquacontrol.ui.theme.Sky
 import com.example.aquacontrol.model.estado.EstadoLinea
 import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
 import com.example.aquacontrol.model.temperatura.FiltroHistorialTemperatura
@@ -61,7 +67,10 @@ fun FiltrosTemperaturaPanel(
 
     ModalBottomSheet(
         onDismissRequest = onCerrar,
-        sheetState = panelState
+        sheetState = panelState,
+        containerColor = Paper,
+        contentColor = Navy,
+        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)
     ) {
         Column(
             modifier = Modifier
@@ -69,7 +78,7 @@ fun FiltrosTemperaturaPanel(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 24.dp)
                 .padding(bottom = 24.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+            verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             Text(
                 text = "Filtrar temperaturas",
@@ -82,7 +91,8 @@ fun FiltrosTemperaturaPanel(
             )
 
             Column(
-                modifier = Modifier.selectableGroup()
+                modifier = Modifier.selectableGroup(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 val opciones = listOf(
                     null to "Todos",
@@ -95,7 +105,15 @@ fun FiltrosTemperaturaPanel(
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .heightIn(min = 48.dp)
+                            .heightIn(min = 56.dp)
+                            .clip(RoundedCornerShape(14.dp))
+                            .background(
+                                if (estadoSeleccionado == valor) {
+                                    Sky
+                                } else {
+                                    MaterialTheme.colorScheme.surface
+                                }
+                            )
                             .selectable(
                                 selected = estadoSeleccionado == valor,
                                 role = Role.RadioButton,
@@ -170,9 +188,15 @@ fun FiltrosTemperaturaPanel(
                         )
                     )
                 },
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 1.dp,
+                    disabledElevation = 0.dp
+                ),
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 56.dp)
             ) {
                 Text(
                     text = "Aplicar filtros",
@@ -187,9 +211,10 @@ fun FiltrosTemperaturaPanel(
                     fechaHasta = null
                     onLimpiar()
                 },
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 56.dp)
             ) {
                 Text(
                     text = "Limpiar filtros",
@@ -261,9 +286,10 @@ private fun CampoFechaFiltro(
     Column {
         OutlinedButton(
             onClick = onSeleccionar,
+            shape = RoundedCornerShape(14.dp),
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 48.dp)
+                .heightIn(min = 56.dp)
         ) {
             Text(
                 text = "$etiqueta: ${

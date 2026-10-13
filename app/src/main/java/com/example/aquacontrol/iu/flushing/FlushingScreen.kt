@@ -44,7 +44,8 @@ import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
 fun FlushingScreen(
     navController: NavController,
     lineaId: Int,
-    viewModel: FlushingViewModel
+    viewModel: FlushingViewModel,
+    puedeRegistrar: Boolean = false
 ) {
     val estado by viewModel.uiState.collectAsState()
     val backStackEntry = navController.currentBackStackEntry
@@ -112,30 +113,32 @@ fun FlushingScreen(
                 )
             }
 
-            item {
-                Button(
-                    onClick = {
-                        navController.navigate(
-                            "${Routes.REGISTRAR_FLUSHING}/$lineaId"
-                        ) {
-                            launchSingleTop = true
-                        }
-                    },
-                    enabled = lineaId > 0,
-                    shape = RoundedCornerShape(14.dp),
-                    elevation = ButtonDefaults.buttonElevation(
-                        defaultElevation = 4.dp,
-                        pressedElevation = 1.dp,
-                        disabledElevation = 0.dp
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 56.dp)
-                ) {
-                    Text(
-                        text = "Registrar flushing",
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+            if (puedeRegistrar) {
+                item {
+                    Button(
+                        onClick = {
+                            navController.navigate(
+                                "${Routes.REGISTRAR_FLUSHING}/$lineaId"
+                            ) {
+                                launchSingleTop = true
+                            }
+                        },
+                        enabled = lineaId > 0,
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 1.dp,
+                            disabledElevation = 0.dp
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                    ) {
+                        Text(
+                            text = "Registrar flushing",
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                    }
                 }
             }
 

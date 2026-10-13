@@ -37,7 +37,8 @@ import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 fun DetalleLineaScreen(
     navController: NavController,
     lineaId: Int,
-    viewModel: DetalleLineaViewModel
+    viewModel: DetalleLineaViewModel,
+    puedeRegistrar: Boolean = false
 ) {
     LaunchedEffect(lineaId, viewModel) {
         viewModel.cargarResumen(lineaId)
@@ -116,34 +117,36 @@ fun DetalleLineaScreen(
                         }
                     }
 
-                    item(key = "registrar_temperatura") {
-                        AquaTarjetaAccion(
-                            titulo = "Registrar temperatura",
-                            icono = Icons.Outlined.Thermostat,
-                            onClick = {
-                                navController.navigate(
-                                    "${Routes.REGISTRAR_TEMPERATURA}/" +
-                                            actual.linea.id
-                                ) {
-                                    launchSingleTop = true
+                    if (puedeRegistrar) {
+                        item(key = "registrar_temperatura") {
+                            AquaTarjetaAccion(
+                                titulo = "Registrar temperatura",
+                                icono = Icons.Outlined.Thermostat,
+                                onClick = {
+                                    navController.navigate(
+                                        "${Routes.REGISTRAR_TEMPERATURA}/" +
+                                                actual.linea.id
+                                    ) {
+                                        launchSingleTop = true
+                                    }
                                 }
-                            }
-                        )
-                    }
+                            )
+                        }
 
-                    item(key = "registrar_flushing") {
-                        AquaTarjetaAccion(
-                            titulo = "Registrar flushing",
-                            icono = Icons.Outlined.Waves,
-                            onClick = {
-                                navController.navigate(
-                                    "${Routes.REGISTRAR_FLUSHING}/" +
-                                            actual.linea.id
-                                ) {
-                                    launchSingleTop = true
+                        item(key = "registrar_flushing") {
+                            AquaTarjetaAccion(
+                                titulo = "Registrar flushing",
+                                icono = Icons.Outlined.Waves,
+                                onClick = {
+                                    navController.navigate(
+                                        "${Routes.REGISTRAR_FLUSHING}/" +
+                                                actual.linea.id
+                                    ) {
+                                        launchSingleTop = true
+                                    }
                                 }
-                            }
-                        )
+                            )
+                        }
                     }
 
                     item(key = "historial_temperaturas") {
