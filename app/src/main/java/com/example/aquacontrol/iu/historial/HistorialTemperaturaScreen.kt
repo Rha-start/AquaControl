@@ -13,6 +13,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.Button
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +33,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.ui.theme.Navy
+import com.example.aquacontrol.ui.theme.Muted
 import com.example.aquacontrol.iu.components.IndicadorEstado
 import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
 import com.example.aquacontrol.model.temperatura.OrigenMedicion
@@ -60,25 +66,14 @@ fun HistorialTemperaturaScreen(
         LazyColumn(
             state = listaState,
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item(key = "encabezado") {
-                Column(
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    Text(
-                        text = "Historial de temperaturas",
-                        style = MaterialTheme.typography.headlineSmall
-                    )
-
-                    if (estado.ubicacion.isNotBlank()) {
-                        Text(
-                            text = estado.ubicacion,
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                    }
-                }
+                AquaEncabezado(
+                    titulo = "Historial de temperaturas",
+                    subtitulo = estado.ubicacion.takeIf { it.isNotBlank() }
+                )
             }
 
             item(key = "filtros") {
@@ -88,6 +83,7 @@ fun HistorialTemperaturaScreen(
                         mostrarFiltros = true
                     },
                     enabled = estado.lineaId != null,
+                    shape = RoundedCornerShape(14.dp),
                     modifier = Modifier
                         .fillMaxWidth()
                         .heightIn(min = 48.dp)
@@ -166,15 +162,27 @@ fun HistorialTemperaturaScreen(
                         key = { "medicion_${it.id}" }
                     ) { medicion ->
                         Card(
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            border = BorderStroke(
+                                width = 1.dp,
+                                color = Navy.copy(alpha = 0.08f)
+                            ),
+                            colors = CardDefaults.cardColors(
+                                containerColor = MaterialTheme.colorScheme.surface,
+                                contentColor = Navy
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 4.dp
+                            )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
+                                modifier = Modifier.padding(20.dp),
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text(
                                     text = "${medicion.temperatura} °C",
-                                    style = MaterialTheme.typography.titleLarge
+                                    style = MaterialTheme.typography.headlineSmall
                                 )
 
                                 IndicadorEstado(
@@ -195,6 +203,7 @@ fun HistorialTemperaturaScreen(
                                         OrigenMedicion.SIMULADA ->
                                             "Origen: Simulada"
                                     },
+                                    color = Muted,
                                     style = MaterialTheme.typography.bodyMedium
                                 )
                             }
