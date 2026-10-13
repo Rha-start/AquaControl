@@ -1,5 +1,6 @@
 package com.example.aquacontrol.iu.temperatura
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,18 +13,20 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Error
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -35,6 +38,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.ui.theme.ContenidoNormalClaro
+import com.example.aquacontrol.ui.theme.FondoNormalClaro
+import com.example.aquacontrol.ui.theme.Navy
 import com.example.aquacontrol.viewmodel.temperatura.RegistrarTemperaturaViewModel
 
 @Composable
@@ -45,7 +52,7 @@ fun RegistrarTemperaturaScreen(
 ) {
     val estado by viewModel.uiState.collectAsState()
 
-    LaunchedEffect(lineaId) {
+    LaunchedEffect(lineaId, viewModel) {
         viewModel.seleccionarLinea(lineaId)
     }
 
@@ -62,17 +69,12 @@ fun RegistrarTemperaturaScreen(
                 .fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                text = "Registrar temperatura",
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            Text(
-                text = "Ingresa la temperatura medida en la línea seleccionada.",
-                style = MaterialTheme.typography.bodyLarge
+            AquaEncabezado(
+                titulo = "Registrar temperatura",
+                etiqueta = "REGISTRO MANUAL"
             )
 
             estado.errorLinea?.let { mensaje ->
@@ -93,63 +95,99 @@ fun RegistrarTemperaturaScreen(
                 }
             }
 
-            OutlinedTextField(
-                value = estado.temperatura,
-                onValueChange = viewModel::actualizarTemperatura,
-                label = { Text("Temperatura (°C)") },
-                enabled = editable && lineaPreparada,
-                singleLine = true,
-                isError = estado.errorTemperatura != null,
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Decimal
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(
+                    width = 1.dp,
+                    color = Navy.copy(alpha = 0.08f)
                 ),
-                supportingText = {
-                    Text(
-                        text = estado.errorTemperatura
-                            ?: "Puedes usar coma o punto decimal."
-                    )
-                },
-                trailingIcon = {
-                    if (estado.errorTemperatura != null) {
-                        Icon(
-                            imageVector = Icons.Default.Error,
-                            contentDescription = "Campo con error"
-                        )
-                    }
-                },
-                modifier = Modifier.fillMaxWidth()
-            )
-
-            Button(
-                onClick = viewModel::registrarTemperatura,
-                enabled = editable && lineaPreparada,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = Navy
+                ),
+                elevation = CardDefaults.cardElevation(
+                    defaultElevation = 4.dp
+                )
             ) {
-                if (estado.guardando) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(20.dp),
-                        strokeWidth = 2.dp
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp)
+                ) {
+                    OutlinedTextField(
+                        value = estado.temperatura,
+                        onValueChange = viewModel::actualizarTemperatura,
+                        label = { Text("Temperatura (°C)") },
+                        enabled = editable && lineaPreparada,
+                        singleLine = true,
+                        isError = estado.errorTemperatura != null,
+                        textStyle = MaterialTheme.typography.titleLarge,
+                        shape = RoundedCornerShape(14.dp),
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Decimal
+                        ),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Thermostat,
+                                contentDescription = null
+                            )
+                        },
+                        supportingText = {
+                            Text(
+                                text = estado.errorTemperatura
+                                    ?: "Puedes usar coma o punto decimal."
+                            )
+                        },
+                        trailingIcon = {
+                            if (estado.errorTemperatura != null) {
+                                Icon(
+                                    imageVector = Icons.Default.Error,
+                                    contentDescription = "Campo con error"
+                                )
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
                     )
 
-                    Spacer(Modifier.width(8.dp))
-                    Text("Guardando…")
-                } else {
-                    Text(
-                        text = if (registrado) {
-                            "Temperatura guardada"
+                    Button(
+                        onClick = viewModel::registrarTemperatura,
+                        enabled = editable && lineaPreparada,
+                        shape = RoundedCornerShape(14.dp),
+                        elevation = ButtonDefaults.buttonElevation(
+                            defaultElevation = 4.dp,
+                            pressedElevation = 1.dp,
+                            disabledElevation = 0.dp
+                        ),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 56.dp)
+                    ) {
+                        if (estado.guardando) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                strokeWidth = 2.dp
+                            )
+
+                            Spacer(Modifier.width(8.dp))
+                            Text("Guardando…")
                         } else {
-                            "Guardar temperatura"
-                        },
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                            Text(
+                                text = if (registrado) {
+                                    "Temperatura guardada"
+                                } else {
+                                    "Guardar temperatura"
+                                },
+                                style = MaterialTheme.typography.labelLarge
+                            )
+                        }
+                    }
                 }
             }
 
             estado.errorGuardado?.let { mensaje ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
                         containerColor =
                             MaterialTheme.colorScheme.errorContainer,
@@ -159,7 +197,7 @@ fun RegistrarTemperaturaScreen(
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.Error,
@@ -168,7 +206,8 @@ fun RegistrarTemperaturaScreen(
 
                         Text(
                             text = mensaje,
-                            modifier = Modifier.weight(1f)
+                            modifier = Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
@@ -177,16 +216,15 @@ fun RegistrarTemperaturaScreen(
             estado.medicionGuardada?.let { medicion ->
                 Card(
                     modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
                     colors = CardDefaults.cardColors(
-                        containerColor =
-                            MaterialTheme.colorScheme.primaryContainer,
-                        contentColor =
-                            MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = FondoNormalClaro,
+                        contentColor = ContenidoNormalClaro
                     )
                 ) {
                     Row(
                         modifier = Modifier.padding(16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        horizontalArrangement = Arrangement.spacedBy(10.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Default.CheckCircle,
@@ -194,16 +232,13 @@ fun RegistrarTemperaturaScreen(
                         )
 
                         Text(
-                            text = "Temperatura de ${medicion.temperatura} °C " +
-                                    "guardada correctamente. Puedes consultarla " +
-                                    "en el historial de la línea.",
+                            text = "Registro guardado: ${medicion.temperatura} °C.",
                             modifier = Modifier.weight(1f),
                             style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
             }
-
         }
     }
 }
