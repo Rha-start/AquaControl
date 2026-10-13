@@ -1,14 +1,19 @@
 package com.example.aquacontrol.iu.alertas
 
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Thermostat
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -21,14 +26,19 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.iu.components.AquaTarjetaAccion
 import com.example.aquacontrol.iu.components.IndicadorEstado
 import com.example.aquacontrol.iu.navigation.Routes
+import com.example.aquacontrol.model.estado.EstadoLinea
+import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
 import com.example.aquacontrol.model.temperatura.OrigenMedicion
+import com.example.aquacontrol.ui.theme.ContenidoAdvertenciaClaro
+import com.example.aquacontrol.ui.theme.ContenidoCriticoClaro
+import com.example.aquacontrol.ui.theme.Muted
+import com.example.aquacontrol.ui.theme.Navy
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaUiState
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
-import java.text.SimpleDateFormat
-import java.util.Date
-import java.util.Locale
 
 @Composable
 fun DetalleAlertaScreen(
@@ -49,13 +59,13 @@ fun DetalleAlertaScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item {
-                Text(
-                    text = "Detalle de alerta",
-                    style = MaterialTheme.typography.headlineSmall
+            item(key = "encabezado") {
+                AquaEncabezado(
+                    titulo = "Detalle de alerta",
+                    subtitulo = "Medición que originó el aviso"
                 )
             }
 
@@ -71,17 +81,20 @@ fun DetalleAlertaScreen(
                         it.id == medicionId && it.lineaId == lineaId
                     }
 
-                    item {
+                    item(key = "ubicacion") {
                         Column(
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                            verticalArrangement = Arrangement.spacedBy(6.dp)
                         ) {
                             Text(
-                                text = "${actual.nombreGranja} · ${actual.nombreGalpon}",
+                                text = "${actual.nombreGranja} · " +
+                                        actual.nombreGalpon,
+                                color = Muted,
                                 style = MaterialTheme.typography.bodyLarge
                             )
 
                             Text(
                                 text = actual.linea.nombre,
+                                color = Navy,
                                 style = MaterialTheme.typography.titleLarge
                             )
                         }
@@ -95,13 +108,36 @@ fun DetalleAlertaScreen(
                             )
                         }
                     } else {
-                        item {
+                        item(key = "medicion") {
+                            val colorEstado = when (medicion.estado) {
+                                EstadoLinea.CRITICO -> ContenidoCriticoClaro
+                                EstadoLinea.ADVERTENCIA ->
+                                    ContenidoAdvertenciaClaro
+                                EstadoLinea.NORMAL -> Navy
+                            }
+
                             Card(
-                                modifier = Modifier.fillMaxWidth()
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(20.dp),
+                                border = BorderStroke(
+                                    width = 1.dp,
+                                    color = colorEstado.copy(alpha = 0.45f)
+                                ),
+                                colors = CardDefaults.cardColors(
+                                    containerColor =
+                                        MaterialTheme.colorScheme.surface,
+                                    contentColor = Navy
+                                ),
+                                elevation = CardDefaults.cardElevation(
+                                    defaultElevation = 5.dp
+                                )
                             ) {
                                 Column(
-                                    modifier = Modifier.padding(16.dp),
-                                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(20.dp),
+                                    verticalArrangement =
+                                        Arrangement.spacedBy(14.dp)
                                 ) {
                                     IndicadorEstado(
                                         estado = medicion.estado,
@@ -110,19 +146,16 @@ fun DetalleAlertaScreen(
 
                                     Text(
                                         text = "${medicion.temperatura} °C",
-                                        style = MaterialTheme.typography.headlineMedium
+                                        color = colorEstado,
+                                        style =
+                                            MaterialTheme.typography.displaySmall
                                     )
 
                                     Text(
-                                        text = "Medición que originó el aviso",
-                                        style = MaterialTheme.typography.titleMedium
-                                    )
-
-                                    Text(
-                                        text = SimpleDateFormat(
-                                            "dd/MM/yyyy HH:mm:ss",
-                                            Locale.getDefault()
-                                        ).format(Date(medicion.fechaHora)),
+                                        text = FechasHistorialTemperatura
+                                            .formatearFechaHora(
+                                                medicion.fechaHora
+                                            ),
                                         style = MaterialTheme.typography.bodyLarge
                                     )
 
@@ -133,26 +166,28 @@ fun DetalleAlertaScreen(
 
                                     Text(
                                         text = "Origen: $origen",
-                                        style = MaterialTheme.typography.bodyMedium
+                                        color = Muted,
+                                        style =
+                                            MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }
                         }
                     }
 
-                    item {
-                        Button(
+                    item(key = "estado_actual") {
+                        AquaTarjetaAccion(
+                            titulo = "Ver estado actual",
+                            descripcion = "Detalle e historiales de la línea",
+                            icono = Icons.Outlined.Thermostat,
                             onClick = {
                                 navController.navigate(
                                     "${Routes.DETALLE_LINEA}/$lineaId"
                                 ) {
                                     launchSingleTop = true
                                 }
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text("Ver estado actual e historial")
-                        }
+                            }
+                        )
                     }
                 }
 
@@ -160,23 +195,25 @@ fun DetalleAlertaScreen(
                     item {
                         Text(
                             text = actual.mensaje,
-                            color = MaterialTheme.colorScheme.error
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
 
                     item {
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 viewModel.cargarHistorial(lineaId)
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Reintentar")
                         }
                     }
                 }
             }
-
         }
     }
 }

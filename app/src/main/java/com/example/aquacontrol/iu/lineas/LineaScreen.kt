@@ -1,17 +1,24 @@
 package com.example.aquacontrol.iu.lineas
 
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.Button
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -20,12 +27,19 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
 import com.example.aquacontrol.iu.components.IndicadorEstado
 import com.example.aquacontrol.iu.navigation.Routes
-import com.example.aquacontrol.model.temperatura.OrigenMedicion
+import com.example.aquacontrol.model.estado.EstadoLinea
+import com.example.aquacontrol.ui.theme.ContenidoCriticoClaro
+import com.example.aquacontrol.ui.theme.Muted
+import com.example.aquacontrol.ui.theme.Navy
+import com.example.aquacontrol.ui.theme.Red
 import com.example.aquacontrol.viewmodel.lineas.LineaUiState
 import com.example.aquacontrol.viewmodel.lineas.LineaViewModel
 import java.text.SimpleDateFormat
@@ -50,21 +64,13 @@ fun LineaScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            item {
-                Text(
-                    text = "Líneas de bebederos",
-                    style = MaterialTheme.typography.headlineSmall
-                )
-            }
-
-            item {
-                Text(
-                    text = "Última medición guardada de cada línea. " +
-                            "Selecciona una línea para abrir su detalle.",
-                    style = MaterialTheme.typography.bodyLarge
+            item(key = "encabezado") {
+                AquaEncabezado(
+                    titulo = "Líneas",
+                    subtitulo = "Últimas temperaturas"
                 )
             }
 
@@ -80,63 +86,97 @@ fun LineaScreen(
                         items = actual.lineas,
                         key = { it.id }
                     ) { linea ->
+                        val medicion = linea.ultimaMedicion
+                        val esCritica =
+                            medicion?.estado == EstadoLinea.CRITICO
+
                         Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clickable(
-                                    onClickLabel = "Ver detalle de ${linea.nombre}"
+                            onClick = {
+                                navController.navigate(
+                                    "${Routes.DETALLE_LINEA}/${linea.id}"
                                 ) {
-                                    navController.navigate(
-                                        "${Routes.DETALLE_LINEA}/${linea.id}"
-                                    ) {
-                                        launchSingleTop = true
-                                    }
+                                    launchSingleTop = true
                                 }
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            border = BorderStroke(
+                                width = if (esCritica) 2.dp else 1.dp,
+                                color = if (esCritica) {
+                                    ContenidoCriticoClaro.copy(alpha = 0.55f)
+                                } else {
+                                    Navy.copy(alpha = 0.08f)
+                                }
+                            ),
+                            colors = CardDefaults.cardColors(
+                                containerColor =
+                                    MaterialTheme.colorScheme.surface,
+                                contentColor = Navy
+                            ),
+                            elevation = CardDefaults.cardElevation(
+                                defaultElevation = 5.dp,
+                                pressedElevation = 1.dp,
+                                focusedElevation = 6.dp,
+                                hoveredElevation = 6.dp
+                            )
                         ) {
                             Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(20.dp),
+                                verticalArrangement =
+                                    Arrangement.spacedBy(12.dp)
                             ) {
-                                Text(
-                                    text = linea.nombre,
-                                    style = MaterialTheme.typography.titleLarge
-                                )
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement =
+                                        Arrangement.spacedBy(12.dp),
+                                    verticalAlignment =
+                                        Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = linea.nombre,
+                                        style =
+                                            MaterialTheme.typography.titleLarge,
+                                        modifier = Modifier.weight(1f)
+                                    )
 
-                                val medicion = linea.ultimaMedicion
+                                    Icon(
+                                        imageVector =
+                                            Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                        contentDescription = null,
+                                        tint = Red,
+                                        modifier = Modifier.size(24.dp)
+                                    )
+                                }
 
                                 if (medicion == null) {
                                     IndicadorEstado(estado = null)
-
-                                    Text(
-                                        text = "Todavía no se ha guardado una " +
-                                                "temperatura para esta línea.",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
                                 } else {
-                                    val nombreOrigen = when (medicion.origen) {
-                                        OrigenMedicion.MANUAL -> "Manual"
-                                        OrigenMedicion.SIMULADA -> "Simulada"
-                                    }
-
                                     Text(
                                         text = "${medicion.temperatura} °C",
-                                        style = MaterialTheme.typography.headlineSmall
+                                        color = if (esCritica) {
+                                            ContenidoCriticoClaro
+                                        } else {
+                                            Navy
+                                        },
+                                        style =
+                                            MaterialTheme.typography.headlineLarge
                                     )
 
                                     IndicadorEstado(
                                         estado = medicion.estado
                                     )
 
-                                    Text(
-                                        text = "Origen: $nombreOrigen",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                    val fecha = remember(medicion.fechaHora) {
+                                        formatearFechaLinea(medicion.fechaHora)
+                                    }
 
                                     Text(
-                                        text = "Última medición: ${
-                                            formatearFechaLinea(medicion.fechaHora)
-                                        }",
-                                        style = MaterialTheme.typography.bodyMedium
+                                        text = "Última medición: $fecha",
+                                        color = Muted,
+                                        style =
+                                            MaterialTheme.typography.bodyMedium
                                     )
                                 }
                             }
@@ -147,32 +187,37 @@ fun LineaScreen(
                 LineaUiState.Empty -> {
                     item {
                         Text(
-                            text = "Este galpón no tiene líneas registradas."
+                            text = "Este galpón no tiene líneas registradas.",
+                            style = MaterialTheme.typography.bodyLarge
                         )
                     }
                 }
 
                 is LineaUiState.Error -> {
                     item {
-                        Text(
-                            text = actual.mensaje,
-                            color = MaterialTheme.colorScheme.error
-                        )
-                    }
-
-                    item {
-                        Button(
-                            onClick = {
-                                viewModel.cargarLineas(galponId)
-                            },
-                            modifier = Modifier.fillMaxWidth()
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(12.dp)
                         ) {
-                            Text("Reintentar")
+                            Text(
+                                text = actual.mensaje,
+                                color = MaterialTheme.colorScheme.error,
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+
+                            OutlinedButton(
+                                onClick = {
+                                    viewModel.cargarLineas(galponId)
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .heightIn(min = 48.dp)
+                            ) {
+                                Text("Reintentar")
+                            }
                         }
                     }
                 }
             }
-
         }
     }
 }

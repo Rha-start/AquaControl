@@ -10,7 +10,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Waves
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -29,6 +32,8 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.iu.components.AquaTarjetaAccion
 import com.example.aquacontrol.iu.navigation.Routes
 import com.example.aquacontrol.model.flushing.EventoFlushing
 import com.example.aquacontrol.model.flushing.FechasCalendarioFlushing
@@ -98,13 +103,12 @@ fun FlushingScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             item {
-                Text(
-                    text = "Historial de flushing",
-                    style = MaterialTheme.typography.headlineSmall
+                AquaEncabezado(
+                    titulo = "Historial de flushing"
                 )
             }
 
@@ -118,9 +122,15 @@ fun FlushingScreen(
                         }
                     },
                     enabled = lineaId > 0,
+                    shape = RoundedCornerShape(14.dp),
+                    elevation = ButtonDefaults.buttonElevation(
+                        defaultElevation = 4.dp,
+                        pressedElevation = 1.dp,
+                        disabledElevation = 0.dp
+                    ),
                     modifier = Modifier
                         .fillMaxWidth()
-                        .heightIn(min = 48.dp)
+                        .heightIn(min = 56.dp)
                 ) {
                     Text(
                         text = "Registrar flushing",
@@ -162,18 +172,26 @@ fun FlushingScreen(
                 FlushingUiState.Empty,
                 is FlushingUiState.Success -> {
                     item {
-                        CalendarioFlushing(
-                            mesVisible = mesVisible,
-                            diaSeleccionado = diaSeleccionado,
-                            diasConEventos = diasConEventos,
-                            onCambiarMes = { nuevoMes ->
-                                mesVisible = nuevoMes
-                                diaSeleccionado = null
-                            },
-                            onSeleccionarDia = { dia ->
-                                diaSeleccionado = dia
-                            }
-                        )
+                        Surface(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(20.dp),
+                            color = MaterialTheme.colorScheme.surface,
+                            shadowElevation = 4.dp
+                        ) {
+                            CalendarioFlushing(
+                                modifier = Modifier.padding(12.dp),
+                                mesVisible = mesVisible,
+                                diaSeleccionado = diaSeleccionado,
+                                diasConEventos = diasConEventos,
+                                onCambiarMes = { nuevoMes ->
+                                    mesVisible = nuevoMes
+                                    diaSeleccionado = null
+                                },
+                                onSeleccionarDia = { dia ->
+                                    diaSeleccionado = dia
+                                }
+                            )
+                        }
                     }
 
                     item {
@@ -275,46 +293,18 @@ private fun RegistroFlushingCalendario(
     evento: EventoFlushing,
     onVerDetalle: () -> Unit
 ) {
-    Card(
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Text(
-                text = evento.fechaHora,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = "Antes: ${evento.temperaturaAntes} °C",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            Text(
-                text = "Después: ${evento.temperaturaDespues} °C",
-                style = MaterialTheme.typography.bodyLarge
-            )
-
-            if (!evento.fotoRuta.isNullOrBlank()) {
-                Text(
-                    text = "Con foto de evidencia",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-
-            OutlinedButton(
-                onClick = onVerDetalle,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .heightIn(min = 48.dp)
-            ) {
-                Text(
-                    text = "Ver detalle",
-                    style = MaterialTheme.typography.bodyLarge
-                )
-            }
+    val resumen = buildString {
+        append("Antes: ${evento.temperaturaAntes} °C")
+        append(" · Después: ${evento.temperaturaDespues} °C")
+        if (!evento.fotoRuta.isNullOrBlank()) {
+            append("\nCon foto de evidencia")
         }
     }
+
+    AquaTarjetaAccion(
+        titulo = evento.fechaHora,
+        descripcion = resumen,
+        icono = Icons.Outlined.Waves,
+        onClick = onVerDetalle
+    )
 }

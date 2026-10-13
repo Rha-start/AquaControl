@@ -2,6 +2,8 @@ package com.example.aquacontrol.iu.flushing
 
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -17,6 +19,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.ui.theme.Navy
+import com.example.aquacontrol.ui.theme.FondoNormalClaro
+import com.example.aquacontrol.ui.theme.ContenidoNormalClaro
 import com.example.aquacontrol.data.flushing.FotosFlushing
 import com.example.aquacontrol.viewmodel.flushing.RegistrarFlushingViewModel
 
@@ -118,18 +124,11 @@ fun RegistrarFlushingScreen(
                 .fillMaxSize()
                 .imePadding()
                 .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Text(
-                text = "Registrar flushing",
-                style = MaterialTheme.typography.headlineSmall
-            )
-
-            Text(
-                text = "Completa los datos del procedimiento. " +
-                        "La foto de evidencia es opcional.",
-                style = MaterialTheme.typography.bodyMedium
+            AquaEncabezado(
+                titulo = "Registrar flushing"
             )
 
             estado.errorLinea?.let { mensaje ->
@@ -139,56 +138,72 @@ fun RegistrarFlushingScreen(
                 )
             }
 
-            CampoFlushing(
-                valor = estado.observacion,
-                alCambiar = {
-                    observacionConservada = it
-                    viewModel.actualizarObservacion(it)
-                },
-                etiqueta = "Observación",
-                error = estado.errorObservacion,
-                habilitado = editable,
-                unaLinea = false
-            )
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(20.dp),
+                border = BorderStroke(1.dp, Navy.copy(alpha = 0.08f)),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    contentColor = Navy
+                ),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+            ) {
+                Column(
+                    modifier = Modifier.padding(20.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    CampoFlushing(
+                        valor = estado.observacion,
+                        alCambiar = {
+                            observacionConservada = it
+                            viewModel.actualizarObservacion(it)
+                        },
+                        etiqueta = "Observación",
+                        error = estado.errorObservacion,
+                        habilitado = editable,
+                        unaLinea = false
+                    )
 
-            CampoFlushing(
-                valor = estado.temperaturaAntes,
-                alCambiar = {
-                    antesConservada = it
-                    viewModel.actualizarTemperaturaAntes(it)
-                },
-                etiqueta = "Temperatura antes (°C)",
-                error = estado.errorTemperaturaAntes,
-                habilitado = editable,
-                teclado = KeyboardType.Decimal
-            )
+                    CampoFlushing(
+                        valor = estado.temperaturaAntes,
+                        alCambiar = {
+                            antesConservada = it
+                            viewModel.actualizarTemperaturaAntes(it)
+                        },
+                        etiqueta = "Temperatura antes (°C)",
+                        error = estado.errorTemperaturaAntes,
+                        habilitado = editable,
+                        teclado = KeyboardType.Decimal
+                    )
 
-            CampoFlushing(
-                valor = estado.temperaturaDespues,
-                alCambiar = {
-                    despuesConservada = it
-                    viewModel.actualizarTemperaturaDespues(it)
-                },
-                etiqueta = "Temperatura después (°C)",
-                error = estado.errorTemperaturaDespues,
-                habilitado = editable,
-                teclado = KeyboardType.Decimal
-            )
+                    CampoFlushing(
+                        valor = estado.temperaturaDespues,
+                        alCambiar = {
+                            despuesConservada = it
+                            viewModel.actualizarTemperaturaDespues(it)
+                        },
+                        etiqueta = "Temperatura después (°C)",
+                        error = estado.errorTemperaturaDespues,
+                        habilitado = editable,
+                        teclado = KeyboardType.Decimal
+                    )
 
-            CampoFlushing(
-                valor = estado.duracionSegundos,
-                alCambiar = {
-                    duracionConservada = it
-                    viewModel.actualizarDuracion(it)
-                },
-                etiqueta = "Duración en segundos",
-                error = estado.errorDuracion,
-                habilitado = editable,
-                teclado = KeyboardType.Number
-            )
+                    CampoFlushing(
+                        valor = estado.duracionSegundos,
+                        alCambiar = {
+                            duracionConservada = it
+                            viewModel.actualizarDuracion(it)
+                        },
+                        etiqueta = "Duración en segundos",
+                        error = estado.errorDuracion,
+                        habilitado = editable,
+                        teclado = KeyboardType.Number
+                    )
+                }
+            }
 
             Text(
-                text = "Foto de evidencia",
+                text = "Foto de evidencia (opcional)",
                 style = MaterialTheme.typography.titleMedium
             )
 
@@ -228,9 +243,10 @@ fun RegistrarFlushingScreen(
                     }
                 },
                 enabled = editable,
+                shape = RoundedCornerShape(14.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 56.dp)
             ) {
                 Text(
                     text = when {
@@ -277,9 +293,15 @@ fun RegistrarFlushingScreen(
                     }
                 },
                 enabled = editable && estado.lineaId == lineaId,
+                shape = RoundedCornerShape(14.dp),
+                elevation = ButtonDefaults.buttonElevation(
+                    defaultElevation = 4.dp,
+                    pressedElevation = 1.dp,
+                    disabledElevation = 0.dp
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .heightIn(min = 48.dp)
+                    .heightIn(min = 56.dp)
             ) {
                 if (estado.guardando) {
                     CircularProgressIndicator(
@@ -330,8 +352,8 @@ fun RegistrarFlushingScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        containerColor = FondoNormalClaro,
+                        contentColor = ContenidoNormalClaro
                     )
                 ) {
                     Row(
@@ -371,6 +393,8 @@ private fun CampoFlushing(
         label = { Text(etiqueta) },
         enabled = habilitado,
         isError = error != null,
+        shape = RoundedCornerShape(14.dp),
+        textStyle = MaterialTheme.typography.bodyLarge,
         singleLine = unaLinea,
         minLines = if (unaLinea) 1 else 3,
         keyboardOptions = KeyboardOptions(

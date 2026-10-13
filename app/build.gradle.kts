@@ -48,6 +48,9 @@ dependencies {
     implementation(aclibs.androidx.lifecycle.runtime.ktx)
     implementation("androidx.navigation:navigation-compose:2.8.0")
 
+    // Carga asíncrona y caché de imágenes locales.
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+
     // Room: persistencia local y generación de código mediante KSP
     implementation(aclibs.room.runtime)
     implementation(aclibs.room.ktx)

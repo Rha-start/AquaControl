@@ -1,15 +1,16 @@
 package com.example.aquacontrol.iu.detalle
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.CalendarMonth
+import androidx.compose.material.icons.outlined.History
+import androidx.compose.material.icons.outlined.Thermostat
+import androidx.compose.material.icons.outlined.Waves
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -22,9 +23,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.aquacontrol.iu.components.AquaEncabezado
+import com.example.aquacontrol.iu.components.AquaPanelResumen
+import com.example.aquacontrol.iu.components.AquaTarjetaAccion
 import com.example.aquacontrol.iu.components.IndicadorEstado
 import com.example.aquacontrol.iu.navigation.Routes
 import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
+import com.example.aquacontrol.model.temperatura.OrigenMedicion
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaUiState
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 
@@ -46,16 +51,13 @@ fun DetalleLineaScreen(
     ) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            contentPadding = PaddingValues(20.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
             when (val actual = estado) {
                 DetalleLineaUiState.Loading -> {
                     item {
-                        Text(
-                            text = "Detalle de línea",
-                            style = MaterialTheme.typography.headlineSmall
-                        )
+                        AquaEncabezado(titulo = "Detalle de línea")
                     }
 
                     item {
@@ -64,69 +66,60 @@ fun DetalleLineaScreen(
                 }
 
                 is DetalleLineaUiState.Success -> {
-                    item {
-                        Column(
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Text(
-                                text = actual.linea.nombre,
-                                style = MaterialTheme.typography.headlineSmall
-                            )
-
-                            Text(
-                                text = "${actual.nombreGranja} · " +
-                                        actual.nombreGalpon,
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                        }
+                    item(key = "encabezado") {
+                        AquaEncabezado(
+                            titulo = actual.linea.nombre,
+                            subtitulo = "${actual.nombreGranja} · " +
+                                    actual.nombreGalpon
+                        )
                     }
 
-                    item {
-                        Card(
-                            modifier = Modifier.fillMaxWidth()
+                    item(key = "medicion") {
+                        AquaPanelResumen(
+                            etiqueta = "Última medición"
                         ) {
-                            Column(
-                                modifier = Modifier.padding(16.dp),
-                                verticalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
+                            val medicion = actual.linea.ultimaMedicion
+
+                            if (medicion == null) {
+                                IndicadorEstado(estado = null)
+
                                 Text(
-                                    text = "Última medición",
-                                    style = MaterialTheme.typography.titleMedium
+                                    text = "Esta línea todavía no tiene mediciones.",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            } else {
+                                Text(
+                                    text = "${medicion.temperatura} °C",
+                                    style = MaterialTheme.typography.displaySmall
                                 )
 
-                                val medicion = actual.linea.ultimaMedicion
+                                IndicadorEstado(
+                                    estado = medicion.estado
+                                )
 
-                                if (medicion == null) {
-                                    IndicadorEstado(estado = null)
+                                Text(
+                                    text = FechasHistorialTemperatura
+                                        .formatearFechaHora(medicion.fechaHora),
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
 
-                                    Text(
-                                        text = "Esta línea todavía no tiene mediciones.",
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
-                                } else {
-                                    Text(
-                                        text = "${medicion.temperatura} °C",
-                                        style = MaterialTheme.typography.headlineMedium
-                                    )
-
-                                    IndicadorEstado(
-                                        estado = medicion.estado
-                                    )
-
-                                    Text(
-                                        text = FechasHistorialTemperatura
-                                            .formatearFechaHora(
-                                                medicion.fechaHora
-                                            ),
-                                        style = MaterialTheme.typography.bodyLarge
-                                    )
+                                val origen = when (medicion.origen) {
+                                    OrigenMedicion.MANUAL -> "Manual"
+                                    OrigenMedicion.SIMULADA -> "Simulada"
                                 }
+
+                                Text(
+                                    text = "Origen: $origen",
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
                             }
                         }
                     }
 
-                    item {
-                        Button(
+                    item(key = "registrar_temperatura") {
+                        AquaTarjetaAccion(
+                            titulo = "Registrar temperatura",
+                            icono = Icons.Outlined.Thermostat,
                             onClick = {
                                 navController.navigate(
                                     "${Routes.REGISTRAR_TEMPERATURA}/" +
@@ -134,20 +127,29 @@ fun DetalleLineaScreen(
                                 ) {
                                     launchSingleTop = true
                                 }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                        ) {
-                            Text(
-                                text = "Registrar temperatura",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
+                            }
+                        )
                     }
 
-                    item {
-                        OutlinedButton(
+                    item(key = "registrar_flushing") {
+                        AquaTarjetaAccion(
+                            titulo = "Registrar flushing",
+                            icono = Icons.Outlined.Waves,
+                            onClick = {
+                                navController.navigate(
+                                    "${Routes.REGISTRAR_FLUSHING}/" +
+                                            actual.linea.id
+                                ) {
+                                    launchSingleTop = true
+                                }
+                            }
+                        )
+                    }
+
+                    item(key = "historial_temperaturas") {
+                        AquaTarjetaAccion(
+                            titulo = "Historial de temperaturas",
+                            icono = Icons.Outlined.History,
                             onClick = {
                                 navController.navigate(
                                     "${Routes.HISTORIAL_TEMPERATURAS}/" +
@@ -155,45 +157,28 @@ fun DetalleLineaScreen(
                                 ) {
                                     launchSingleTop = true
                                 }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                        ) {
-                            Text(
-                                text = "Historial de temperaturas",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
+                            }
+                        )
                     }
 
-                    item {
-                        OutlinedButton(
+                    item(key = "historial_flushing") {
+                        AquaTarjetaAccion(
+                            titulo = "Historial de flushing",
+                            icono = Icons.Outlined.CalendarMonth,
                             onClick = {
                                 navController.navigate(
                                     "${Routes.FLUSHING}/${actual.linea.id}"
                                 ) {
                                     launchSingleTop = true
                                 }
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .heightIn(min = 48.dp)
-                        ) {
-                            Text(
-                                text = "Historial de flushing",
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
+                            }
+                        )
                     }
                 }
 
                 is DetalleLineaUiState.Error -> {
                     item {
-                        Text(
-                            text = "Detalle de línea",
-                            style = MaterialTheme.typography.headlineSmall
-                        )
+                        AquaEncabezado(titulo = "Detalle de línea")
                     }
 
                     item {
@@ -205,11 +190,13 @@ fun DetalleLineaScreen(
                     }
 
                     item {
-                        Button(
+                        OutlinedButton(
                             onClick = {
                                 viewModel.cargarResumen(lineaId)
                             },
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .heightIn(min = 48.dp)
                         ) {
                             Text("Reintentar")
                         }

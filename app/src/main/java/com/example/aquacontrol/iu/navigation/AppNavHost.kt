@@ -42,6 +42,8 @@ import com.example.aquacontrol.iu.roles.RolSelectionScreen
 import com.example.aquacontrol.iu.roles.SupervisorScreen
 import com.example.aquacontrol.iu.simulacion.SimulacionScreen
 import com.example.aquacontrol.iu.temperatura.RegistrarTemperaturaScreen
+import com.example.aquacontrol.model.estado.EstadoLinea
+import com.example.aquacontrol.viewmodel.alertas.AlertasUiState
 import com.example.aquacontrol.notificaciones.NotificadorAlertas
 import com.example.aquacontrol.repository.flushing.FlushingRepositoryImpl
 import com.example.aquacontrol.repository.temperatura.TemperaturaRepositoryImpl
@@ -49,6 +51,7 @@ import com.example.aquacontrol.viewmodel.alertas.AlertasViewModel
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
 import com.example.aquacontrol.viewmodel.flushing.RegistrarFlushingViewModel
+import com.example.aquacontrol.viewmodel.galpones.GalponViewModel
 import com.example.aquacontrol.viewmodel.historial.HistorialTemperaturaViewModel
 import com.example.aquacontrol.viewmodel.lineas.LineaViewModel
 import com.example.aquacontrol.viewmodel.perfil.PerfilViewModel
@@ -129,6 +132,14 @@ fun AppNavHost(
         }
     }
 
+    val galponesFactory = remember(temperaturaRepository) {
+        viewModelFactory {
+            initializer {
+                GalponViewModel(temperaturaRepository)
+            }
+        }
+    }
+
     val lineasFactory = remember(temperaturaRepository) {
         viewModelFactory {
             initializer {
@@ -151,6 +162,19 @@ fun AppNavHost(
                 AlertasViewModel(temperaturaRepository)
             }
         }
+    }
+
+    val alertasViewModel: AlertasViewModel = viewModel(
+        factory = alertasFactory
+    )
+    val estadoAlertas by alertasViewModel.uiState.collectAsState()
+    val alertasActuales = (estadoAlertas as? AlertasUiState.Success)
+        ?.alertas.orEmpty()
+    val cantidadCriticas = alertasActuales.count {
+        it.medicion.estado == EstadoLinea.CRITICO
+    }
+    val cantidadAdvertencias = alertasActuales.count {
+        it.medicion.estado == EstadoLinea.ADVERTENCIA
     }
 
     val supervisorFactory = remember(temperaturaRepository) {
@@ -189,7 +213,14 @@ fun AppNavHost(
     }
 
     Scaffold(
-        bottomBar = { BottomBar(navController = navController, perfil = perfil) }
+        bottomBar = {
+            BottomBar(
+                navController = navController,
+                perfil = perfil,
+                cantidadCriticas = cantidadCriticas,
+                cantidadAdvertencias = cantidadAdvertencias
+            )
+        }
     ) { innerPadding ->
         NavHost(
             navController = navController,
@@ -229,7 +260,16 @@ fun AppNavHost(
                     ?.getString("granjaId")
                     ?.toIntOrNull() ?: 0
 
-                GalponScreen(navController, granjaId)
+                val galponesViewModel: GalponViewModel = viewModel(
+                    viewModelStoreOwner = backStack,
+                    factory = galponesFactory
+                )
+
+                GalponScreen(
+                    navController = navController,
+                    granjaId = granjaId,
+                    viewModel = galponesViewModel
+                )
             }
 
             // Líneas
@@ -473,11 +513,7 @@ fun AppNavHost(
             }
 
             // Alertas actuales
-            composable(Routes.ALERTAS) { backStack ->
-                val alertasViewModel: AlertasViewModel = viewModel(
-                    viewModelStoreOwner = backStack,
-                    factory = alertasFactory
-                )
+            composable(Routes.ALERTAS) {
 
                 AlertasScreen(
                     navController = navController,

@@ -1,58 +1,60 @@
 package com.example.aquacontrol.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 
 private val LightColors = lightColorScheme(
-    primary = Color(0xFFB32624),
+    primary = Red,
     onPrimary = Color.White,
-    primaryContainer = Color(0xFFFFE5E1),
-    onPrimaryContainer = Color(0xFF6D1716),
+    primaryContainer = FondoCriticoClaro,
+    onPrimaryContainer = ContenidoCriticoClaro,
 
-    secondary = Color(0xFF49616C),
+    secondary = Blue,
     onSecondary = Color.White,
-    secondaryContainer = Color(0xFFE4EDF0),
-    onSecondaryContainer = Color(0xFF263D47),
+    secondaryContainer = Sky,
+    onSecondaryContainer = Navy,
 
-    tertiary = Color(0xFF52634D),
+    tertiary = AzulPanelAqua,
     onTertiary = Color.White,
-    tertiaryContainer = Color(0xFFE5EDDF),
-    onTertiaryContainer = Color(0xFF303E2C),
+    tertiaryContainer = Sky,
+    onTertiaryContainer = Navy,
 
-    background = Color(0xFFF7F7F3),
-    onBackground = Color(0xFF252A2D),
+    background = Paper,
+    onBackground = Navy,
 
-    surface = Color(0xFFFCFCF9),
-    onSurface = Color(0xFF252A2D),
-    surfaceVariant = Color(0xFFEEEFEA),
-    onSurfaceVariant = Color(0xFF4E5558),
-    surfaceTint = Color(0xFFB32624),
+    surface = Color.White,
+    onSurface = Navy,
+    surfaceVariant = Paper,
+    onSurfaceVariant = Muted,
+    surfaceTint = Color.Transparent,
 
-    outline = Color(0xFF737B7D),
-    outlineVariant = Color(0xFFCDD2CE),
+    outline = Muted,
+    outlineVariant = Line,
 
-    error = Color(0xFFB3261E),
+    error = ContenidoCriticoClaro,
     onError = Color.White,
-    errorContainer = Color(0xFFFCE5E2),
-    onErrorContainer = Color(0xFF781D18),
+    errorContainer = FondoCriticoClaro,
+    onErrorContainer = ContenidoCriticoClaro,
 
-    inverseSurface = Color(0xFF303638),
-    inverseOnSurface = Color(0xFFF1F3EE),
+    inverseSurface = Navy,
+    inverseOnSurface = Color.White,
     inversePrimary = Color(0xFFFFB4AA),
 
     scrim = Color.Black,
 
-    surfaceDim = Color(0xFFDDDFD9),
-    surfaceBright = Color(0xFFFCFCF9),
+    surfaceDim = Color(0xFFE8EEED),
+    surfaceBright = Color.White,
     surfaceContainerLowest = Color.White,
-    surfaceContainerLow = Color(0xFFF5F6F1),
-    surfaceContainer = Color(0xFFEEEFEA),
-    surfaceContainerHigh = Color(0xFFE8EAE4),
-    surfaceContainerHighest = Color(0xFFE2E4DE)
+    surfaceContainerLow = Color.White,
+    surfaceContainer = Color.White,
+    surfaceContainerHigh = Paper,
+    surfaceContainerHighest = Color(0xFFEDF2F1)
 )
 
 private val DarkColors = darkColorScheme(
@@ -61,58 +63,65 @@ private val DarkColors = darkColorScheme(
     primaryContainer = Color(0xFF713330),
     onPrimaryContainer = Color(0xFFFFDAD5),
 
-    secondary = Color(0xFFB1CBD5),
-    onSecondary = Color(0xFF19333D),
-    secondaryContainer = Color(0xFF344C56),
-    onSecondaryContainer = Color(0xFFD5EAF2),
+    secondary = Color(0xFFA4D8EF),
+    onSecondary = Navy,
+    secondaryContainer = Color(0xFF164B60),
+    onSecondaryContainer = Sky,
 
-    tertiary = Color(0xFFBACDB0),
-    onTertiary = Color(0xFF263521),
-    tertiaryContainer = Color(0xFF3D5036),
-    onTertiaryContainer = Color(0xFFDDEAD4),
+    tertiary = Color(0xFF9ED5E4),
+    onTertiary = Navy,
+    tertiaryContainer = Color(0xFF164B60),
+    onTertiaryContainer = Sky,
 
-    background = Color(0xFF171C1F),
-    onBackground = Color(0xFFE5E9E7),
+    background = Color(0xFF101D25),
+    onBackground = Color(0xFFE5EDF1),
 
-    surface = Color(0xFF1B2124),
-    onSurface = Color(0xFFE5E9E7),
-    surfaceVariant = Color(0xFF343E42),
-    onSurfaceVariant = Color(0xFFC1CBCB),
-    surfaceTint = Color(0xFFFFB4AA),
+    surface = Color(0xFF172630),
+    onSurface = Color(0xFFE5EDF1),
+    surfaceVariant = Color(0xFF293D48),
+    onSurfaceVariant = Color(0xFFBDCDD5),
+    surfaceTint = Color.Transparent,
 
-    outline = Color(0xFF8B9798),
-    outlineVariant = Color(0xFF465255),
+    outline = Color(0xFF8EA5B1),
+    outlineVariant = Color(0xFF3B515D),
 
-    error = Color(0xFFFFB4AB),
+    error = ContenidoCriticoOscuro,
     onError = Color(0xFF690005),
-    errorContainer = Color(0xFF65302D),
-    onErrorContainer = Color(0xFFFFDAD6),
+    errorContainer = FondoCriticoOscuro,
+    onErrorContainer = ContenidoCriticoOscuro,
 
-    inverseSurface = Color(0xFFE5E9E7),
-    inverseOnSurface = Color(0xFF293033),
-    inversePrimary = Color(0xFFB32624),
+    inverseSurface = Paper,
+    inverseOnSurface = Navy,
+    inversePrimary = Red,
 
     scrim = Color.Black,
 
-    surfaceDim = Color(0xFF121719),
-    surfaceBright = Color(0xFF363E41),
-    surfaceContainerLowest = Color(0xFF101517),
-    surfaceContainerLow = Color(0xFF1B2124),
-    surfaceContainer = Color(0xFF20282B),
-    surfaceContainerHigh = Color(0xFF293235),
-    surfaceContainerHighest = Color(0xFF343E42)
+    surfaceDim = Color(0xFF0C171E),
+    surfaceBright = Color(0xFF304551),
+    surfaceContainerLowest = Color(0xFF0C171E),
+    surfaceContainerLow = Color(0xFF172630),
+    surfaceContainer = Color(0xFF1C2E39),
+    surfaceContainerHigh = Color(0xFF243844),
+    surfaceContainerHighest = Color(0xFF2D4450)
+)
+
+private val AquaShapes = Shapes(
+    extraSmall = RoundedCornerShape(8.dp),
+    small = RoundedCornerShape(12.dp),
+    medium = RoundedCornerShape(16.dp),
+    large = RoundedCornerShape(20.dp),
+    extraLarge = RoundedCornerShape(28.dp)
 )
 
 @Composable
 fun AquaControlTheme(
-    darkTheme: Boolean = isSystemInDarkTheme(),
+    darkTheme: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colors = if (darkTheme) DarkColors else LightColors
-
     MaterialTheme(
-        colorScheme = colors,
+        colorScheme = if (darkTheme) DarkColors else LightColors,
         typography = Typography,
+        shapes = AquaShapes,
         content = content
     )
 }
