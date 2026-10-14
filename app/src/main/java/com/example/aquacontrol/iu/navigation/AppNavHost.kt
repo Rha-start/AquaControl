@@ -43,6 +43,7 @@ import com.example.aquacontrol.iu.roles.SupervisorScreen
 import com.example.aquacontrol.iu.simulacion.SimulacionScreen
 import com.example.aquacontrol.iu.temperatura.RegistrarTemperaturaScreen
 import com.example.aquacontrol.model.estado.EstadoLinea
+import com.example.aquacontrol.model.perfil.PerfilUsuario
 import com.example.aquacontrol.viewmodel.alertas.AlertasUiState
 import com.example.aquacontrol.notificaciones.NotificadorAlertas
 import com.example.aquacontrol.repository.flushing.FlushingRepositoryImpl
@@ -72,6 +73,7 @@ fun AppNavHost(
     val navController = rememberNavController()
     val perfilViewModel: PerfilViewModel = viewModel()
     val perfil by perfilViewModel.perfilSeleccionado.collectAsState()
+    val puedeRegistrar = perfil == PerfilUsuario.OPERARIO
     val appContext = LocalContext.current.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
 
@@ -197,6 +199,12 @@ fun AppNavHost(
         factory = simulacionFactory
     )
 
+    LaunchedEffect(puedeRegistrar, simulacionViewModel) {
+        if (!puedeRegistrar) {
+            simulacionViewModel.detener()
+        }
+    }
+
     DisposableEffect(lifecycleOwner, simulacionViewModel) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) {
@@ -233,7 +241,11 @@ fun AppNavHost(
             }
 
             composable(Routes.OPERARIO_HOME) {
-                OperarioScreen(navController, perfilViewModel)
+                if (puedeRegistrar) {
+                    OperarioScreen(navController, perfilViewModel)
+                } else {
+                    Text("Selecciona el rol Operario desde Inicio para acceder.")
+                }
             }
 
             composable(Routes.SUPERVISOR_HOME) { backStack ->
@@ -316,7 +328,8 @@ fun AppNavHost(
                 DetalleLineaScreen(
                     navController = navController,
                     lineaId = lineaId,
-                    viewModel = detalleViewModel
+                    viewModel = detalleViewModel,
+                    puedeRegistrar = puedeRegistrar
                 )
             }
 
@@ -360,7 +373,9 @@ fun AppNavHost(
                 val lineaId = backStack.arguments
                     ?.getInt("lineaId") ?: 0
 
-                if (lineaId <= 0) {
+                if (!puedeRegistrar) {
+                    Text("El registro está disponible solo para el operario.")
+                } else if (lineaId <= 0) {
                     Text(
                         "No se pudo identificar la línea. Vuelve y selecciónala."
                     )
@@ -440,7 +455,8 @@ fun AppNavHost(
                     FlushingScreen(
                         navController = navController,
                         lineaId = lineaId,
-                        viewModel = historialViewModel
+                        viewModel = historialViewModel,
+                        puedeRegistrar = puedeRegistrar
                     )
                 }
             }
@@ -457,7 +473,9 @@ fun AppNavHost(
                 val lineaId = backStack.arguments
                     ?.getInt("lineaId") ?: 0
 
-                if (lineaId <= 0) {
+                if (!puedeRegistrar) {
+                    Text("El registro está disponible solo para el operario.")
+                } else if (lineaId <= 0) {
                     Text(
                         "No se pudo identificar la línea. Vuelve y selecciónala."
                     )
@@ -523,15 +541,23 @@ fun AppNavHost(
 
             // Selección para registrar flushing
             composable(Routes.FLUSHING) {
-                FlushingHomeScreen(navController)
+                if (puedeRegistrar) {
+                    FlushingHomeScreen(navController)
+                } else {
+                    Text("El registro está disponible solo para el operario.")
+                }
             }
 
             // Simulación compartida
             composable(Routes.SIMULACION) {
-                SimulacionScreen(
-                    navController = navController,
-                    viewModel = simulacionViewModel
-                )
+                if (puedeRegistrar) {
+                    SimulacionScreen(
+                        navController = navController,
+                        viewModel = simulacionViewModel
+                    )
+                } else {
+                    Text("La simulación está disponible solo para el operario.")
+                }
             }
         }
     }
