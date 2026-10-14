@@ -318,7 +318,6 @@ AquaControl/
 │   │   │   ├── FlushingViewModel.kt
 │   │   │   ├── RegistrarFlushingUiState.kt
 │   │   │   ├── RegistrarFlushingViewModel.kt
-│   │   │   └── RegistrarFlushingViewModelFactory.kt  ← RIMSKY
 │   │   │
 │   │   ├── galpones/                          ← CHRIS
 │   │   │   ├── GalponUiState.kt
