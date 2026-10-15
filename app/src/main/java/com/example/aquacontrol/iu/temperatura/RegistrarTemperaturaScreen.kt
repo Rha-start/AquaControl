@@ -1,3 +1,5 @@
+// Recoge la lectura manual y muestra validación, guardado y resultado del ViewModel.
+// Conecta con: viewmodel/temperatura/RegistrarTemperaturaViewModel.kt (desde com/example/aquacontrol).
 package com.example.aquacontrol.iu.temperatura
 
 import androidx.compose.foundation.BorderStroke
@@ -28,12 +30,17 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -45,20 +52,59 @@ import com.example.aquacontrol.ui.theme.Navy
 import com.example.aquacontrol.viewmodel.temperatura.RegistrarTemperaturaViewModel
 
 @Composable
+// Recoge la lectura manual y muestra validación, guardado y resultado del ViewModel.
 fun RegistrarTemperaturaScreen(
     navController: NavController,
     lineaId: Int,
     viewModel: RegistrarTemperaturaViewModel
 ) {
+    // Observa el ViewModel; cada cambio de estado actualiza la interfaz.
     val estado by viewModel.uiState.collectAsState()
 
     LaunchedEffect(lineaId, viewModel) {
         viewModel.seleccionarLinea(lineaId)
     }
 
+    // Conserva la confirmación al recrear la pantalla y la reinicia al cambiar de línea.
+    var confirmarGuardado by rememberSaveable(lineaId) { mutableStateOf(false) }
+
     val registrado = estado.medicionGuardada != null
     val editable = !estado.guardando && !registrado
     val lineaPreparada = lineaId > 0 && estado.lineaId == lineaId
+
+    // Solo el botón Guardar del diálogo llama al ViewModel, que mantiene sus validaciones.
+    // Cancelar, tocar fuera o usar Atrás cierra el diálogo sin borrar lo escrito.
+    if (confirmarGuardado && editable && lineaPreparada) {
+        AlertDialog(
+            onDismissRequest = { confirmarGuardado = false },
+            title = { Text("Confirmar guardado") },
+            text = {
+                Text("¿Confirmas que deseas guardar los datos de temperatura?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        // Cierra primero para que una segunda pulsación no vuelva a enviar el registro.
+                        if (confirmarGuardado && editable && lineaPreparada) {
+                            confirmarGuardado = false
+                            viewModel.registrarTemperatura()
+                        }
+                    },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { confirmarGuardado = false },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -150,7 +196,8 @@ fun RegistrarTemperaturaScreen(
                     )
 
                     Button(
-                        onClick = viewModel::registrarTemperatura,
+                        // Solicita confirmación; todavía no valida ni escribe en Room.
+                        onClick = { confirmarGuardado = true },
                         enabled = editable && lineaPreparada,
                         shape = RoundedCornerShape(14.dp),
                         elevation = ButtonDefaults.buttonElevation(

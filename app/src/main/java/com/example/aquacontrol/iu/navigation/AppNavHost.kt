@@ -1,3 +1,7 @@
+// Conecta pantallas, repositorios y ViewModels; aplica los permisos del rol seleccionado.
+// Conecta con: data/flushing/local/FlushingLocalDataSource.kt (desde com/example/aquacontrol).
+// Conecta con: data/temperatura/local/TemperaturaLocalDataSource.kt (desde com/example/aquacontrol).
+// Conecta con: notificaciones/NotificadorAlertas.kt (desde com/example/aquacontrol).
 package com.example.aquacontrol.iu.navigation
 
 import androidx.compose.foundation.layout.padding
@@ -23,6 +27,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.aquacontrol.data.AppDatabase
+import com.example.aquacontrol.data.flushing.FotosFlushing
 import com.example.aquacontrol.data.flushing.local.FlushingLocalDataSource
 import com.example.aquacontrol.data.temperatura.local.TemperaturaLocalDataSource
 import com.example.aquacontrol.iu.alertas.AlertasScreen
@@ -41,6 +46,7 @@ import com.example.aquacontrol.iu.roles.OperarioScreen
 import com.example.aquacontrol.iu.roles.RolSelectionScreen
 import com.example.aquacontrol.iu.roles.SupervisorScreen
 import com.example.aquacontrol.iu.simulacion.SimulacionScreen
+import com.example.aquacontrol.iu.temperatura.DetalleTemperaturaScreen
 import com.example.aquacontrol.iu.temperatura.RegistrarTemperaturaScreen
 import com.example.aquacontrol.model.estado.EstadoLinea
 import com.example.aquacontrol.model.perfil.PerfilUsuario
@@ -50,6 +56,7 @@ import com.example.aquacontrol.repository.flushing.FlushingRepositoryImpl
 import com.example.aquacontrol.repository.temperatura.TemperaturaRepositoryImpl
 import com.example.aquacontrol.viewmodel.alertas.AlertasViewModel
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
+import com.example.aquacontrol.viewmodel.flushing.DetalleFlushingViewModel
 import com.example.aquacontrol.viewmodel.flushing.FlushingViewModel
 import com.example.aquacontrol.viewmodel.flushing.RegistrarFlushingViewModel
 import com.example.aquacontrol.viewmodel.galpones.GalponViewModel
@@ -58,6 +65,8 @@ import com.example.aquacontrol.viewmodel.lineas.LineaViewModel
 import com.example.aquacontrol.viewmodel.perfil.PerfilViewModel
 import com.example.aquacontrol.viewmodel.simulacion.SimulacionViewModel
 import com.example.aquacontrol.viewmodel.supervisor.SupervisorViewModel
+import com.example.aquacontrol.viewmodel.temperatura.GraficoTemperaturaViewModel
+import com.example.aquacontrol.viewmodel.temperatura.DetalleTemperaturaViewModel
 import com.example.aquacontrol.viewmodel.temperatura.RegistrarTemperaturaViewModel
 
 private const val DETALLE_ALERTA = "detalleAlerta"
@@ -65,6 +74,7 @@ private const val DETALLE_ALERTA_PARAM =
     "$DETALLE_ALERTA/{lineaId}/{medicionId}"
 
 @Composable
+// Conecta pantallas, repositorios y ViewModels; aplica los permisos del rol seleccionado.
 fun AppNavHost(
     lineaIdNotificacion: Int? = null,
     medicionIdNotificacion: Long? = null,
@@ -73,10 +83,12 @@ fun AppNavHost(
     val navController = rememberNavController()
     val perfilViewModel: PerfilViewModel = viewModel()
     val perfil by perfilViewModel.perfilSeleccionado.collectAsState()
+    // Fuente única del permiso que se envía a las pantallas y protege las rutas.
     val puedeRegistrar = perfil == PerfilUsuario.OPERARIO
     val appContext = LocalContext.current.applicationContext
     val lifecycleOwner = LocalLifecycleOwner.current
 
+    // Comparte la base Room de data/AppDatabase.kt entre todos los repositorios.
     val database = remember(appContext) {
         AppDatabase.getInstance(appContext)
     }
@@ -110,10 +122,26 @@ fun AppNavHost(
         }
     }
 
+    // Inyecta FlushingRepository al ViewModel de registro; esta es la fábrica usada actualmente.
     val registroFactory = remember(flushingRepository) {
         viewModelFactory {
             initializer {
                 RegistrarFlushingViewModel(flushingRepository)
+            }
+        }
+    }
+
+    // Inyecta el repositorio y la limpieza de evidencia al detalle de flushing.
+    val detalleFlushingFactory = remember(flushingRepository, appContext) {
+        viewModelFactory {
+            initializer {
+                DetalleFlushingViewModel(
+                    repository = flushingRepository,
+                    eliminarFoto = { nombre ->
+                        // El ViewModel invoca esta limpieza solo después de eliminar el evento en Room.
+                        FotosFlushing.eliminarFotoNoGuardada(appContext, nombre)
+                    }
+                )
             }
         }
     }
@@ -130,6 +158,24 @@ fun AppNavHost(
         viewModelFactory {
             initializer {
                 HistorialTemperaturaViewModel(temperaturaRepository)
+            }
+        }
+    }
+
+    // Inyecta el repositorio al detalle que permite editar o eliminar según el rol.
+    val detalleTemperaturaFactory = remember(temperaturaRepository) {
+        viewModelFactory {
+            initializer {
+                DetalleTemperaturaViewModel(temperaturaRepository)
+            }
+        }
+    }
+
+    // Proporciona el repositorio al gráfico sin crear otra base de datos.
+    val graficoTemperaturaFactory = remember(temperaturaRepository) {
+        viewModelFactory {
+            initializer {
+                GraficoTemperaturaViewModel(temperaturaRepository)
             }
         }
     }
@@ -169,6 +215,7 @@ fun AppNavHost(
     val alertasViewModel: AlertasViewModel = viewModel(
         factory = alertasFactory
     )
+    // Observa el ViewModel; cada cambio de estado actualiza la interfaz.
     val estadoAlertas by alertasViewModel.uiState.collectAsState()
     val alertasActuales = (estadoAlertas as? AlertasUiState.Success)
         ?.alertas.orEmpty()
@@ -199,12 +246,15 @@ fun AppNavHost(
         factory = simulacionFactory
     )
 
+    // Detiene la generación de lecturas cuando el perfil deja de ser Operario.
     LaunchedEffect(puedeRegistrar, simulacionViewModel) {
+        // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
         if (!puedeRegistrar) {
             simulacionViewModel.detener()
         }
     }
 
+    // Vincula la simulación al ciclo de vida; ON_STOP la detiene al ir a segundo plano.
     DisposableEffect(lifecycleOwner, simulacionViewModel) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_STOP) {
@@ -220,6 +270,7 @@ fun AppNavHost(
         }
     }
 
+    // Reserva el área de la barra inferior y entrega su margen al contenido navegable.
     Scaffold(
         bottomBar = {
             BottomBar(
@@ -230,6 +281,7 @@ fun AppNavHost(
             )
         }
     ) { innerPadding ->
+        // Declara las rutas y convierte sus parámetros a los IDs usados por cada pantalla.
         NavHost(
             navController = navController,
             startDestination = Routes.ROLE_SELECTION,
@@ -241,6 +293,7 @@ fun AppNavHost(
             }
 
             composable(Routes.OPERARIO_HOME) {
+                // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                 if (puedeRegistrar) {
                     OperarioScreen(navController, perfilViewModel)
                 } else {
@@ -325,11 +378,23 @@ fun AppNavHost(
                     factory = detalleFactory
                 )
 
+                // Solo Supervisor recibe el gráfico; cada detalle conserva su propio ViewModel.
+                val graficoViewModel: GraficoTemperaturaViewModel? =
+                    if (perfil == PerfilUsuario.SUPERVISOR) {
+                        viewModel<GraficoTemperaturaViewModel>(
+                            viewModelStoreOwner = backStack,
+                            factory = graficoTemperaturaFactory
+                        )
+                    } else {
+                        null
+                    }
+
                 DetalleLineaScreen(
                     navController = navController,
                     lineaId = lineaId,
                     viewModel = detalleViewModel,
-                    puedeRegistrar = puedeRegistrar
+                    puedeRegistrar = puedeRegistrar,
+                    graficoViewModel = graficoViewModel
                 )
             }
 
@@ -356,7 +421,43 @@ fun AppNavHost(
 
                     HistorialTemperaturaScreen(
                         lineaId = lineaId,
-                        viewModel = historialTemperaturaViewModel
+                        viewModel = historialTemperaturaViewModel,
+                        // Conserva el historial en la pila para regresar con sus filtros.
+                        onVerDetalle = { medicionId ->
+                            navController.navigate(
+                                "${Routes.DETALLE_TEMPERATURA}/$lineaId/$medicionId"
+                            ) {
+                                launchSingleTop = true
+                            }
+                        }
+                    )
+                }
+            }
+
+            // Detalle de una medición: recibe su identidad y el perfil actual.
+            composable(
+                route = Routes.DETALLE_TEMPERATURA_PARAM,
+                arguments = listOf(
+                    navArgument("lineaId") { type = NavType.IntType },
+                    navArgument("medicionId") { type = NavType.LongType }
+                )
+            ) { backStack ->
+                val lineaId = backStack.arguments?.getInt("lineaId") ?: 0
+                val medicionId = backStack.arguments?.getLong("medicionId") ?: 0L
+
+                if (lineaId <= 0 || medicionId <= 0L) {
+                    Text("No se pudo identificar la medición.")
+                } else {
+                    // Cada entrada mantiene su propio estado y borrador de edición.
+                    val detalleTemperaturaViewModel: DetalleTemperaturaViewModel = viewModel(
+                        viewModelStoreOwner = backStack,
+                        factory = detalleTemperaturaFactory
+                    )
+                    DetalleTemperaturaScreen(
+                        lineaId = lineaId,
+                        medicionId = medicionId,
+                        perfil = perfil,
+                        viewModel = detalleTemperaturaViewModel
                     )
                 }
             }
@@ -373,6 +474,7 @@ fun AppNavHost(
                 val lineaId = backStack.arguments
                     ?.getInt("lineaId") ?: 0
 
+                // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                 if (!puedeRegistrar) {
                     Text("El registro está disponible solo para el operario.")
                 } else if (lineaId <= 0) {
@@ -473,6 +575,7 @@ fun AppNavHost(
                 val lineaId = backStack.arguments
                     ?.getInt("lineaId") ?: 0
 
+                // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                 if (!puedeRegistrar) {
                     Text("El registro está disponible solo para el operario.")
                 } else if (lineaId <= 0) {
@@ -515,16 +618,17 @@ fun AppNavHost(
                 if (lineaId <= 0 || eventoId <= 0) {
                     Text("No se pudo identificar el registro de flushing.")
                 } else {
-                    val detalleFlushingViewModel: FlushingViewModel =
+                    // Estado independiente del historial, con edición y eliminación por perfil.
+                    val detalleFlushingViewModel: DetalleFlushingViewModel =
                         viewModel(
                             viewModelStoreOwner = backStack,
-                            factory = historialFactory
+                            factory = detalleFlushingFactory
                         )
 
                     FlushingDetalleScreen(
-                        navController = navController,
                         lineaId = lineaId,
                         eventoId = eventoId,
+                        perfil = perfil,
                         viewModel = detalleFlushingViewModel
                     )
                 }
@@ -541,6 +645,7 @@ fun AppNavHost(
 
             // Selección para registrar flushing
             composable(Routes.FLUSHING) {
+                // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                 if (puedeRegistrar) {
                     FlushingHomeScreen(navController)
                 } else {
@@ -550,6 +655,7 @@ fun AppNavHost(
 
             // Simulación compartida
             composable(Routes.SIMULACION) {
+                // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                 if (puedeRegistrar) {
                     SimulacionScreen(
                         navController = navController,
@@ -562,6 +668,7 @@ fun AppNavHost(
         }
     }
 
+    // Abre el detalle de la medición recibida desde MainActivity al tocar una notificación.
     LaunchedEffect(
         lineaIdNotificacion,
         medicionIdNotificacion

@@ -1,3 +1,5 @@
+// Muestra la última medición y los historiales; permite registrar solo con permiso del rol.
+// Conecta con: viewmodel/detalle/DetalleLineaViewModel.kt (desde com/example/aquacontrol).
 package com.example.aquacontrol.iu.detalle
 
 import androidx.compose.foundation.layout.Arrangement
@@ -22,11 +24,14 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.example.aquacontrol.iu.components.AquaEncabezado
 import com.example.aquacontrol.iu.components.AquaPanelResumen
 import com.example.aquacontrol.iu.components.AquaTarjetaAccion
 import com.example.aquacontrol.iu.components.IndicadorEstado
+import com.example.aquacontrol.iu.temperatura.GraficoTemperatura
+import com.example.aquacontrol.viewmodel.temperatura.GraficoTemperaturaViewModel
 import com.example.aquacontrol.iu.navigation.Routes
 import com.example.aquacontrol.model.temperatura.FechasHistorialTemperatura
 import com.example.aquacontrol.model.temperatura.OrigenMedicion
@@ -34,16 +39,19 @@ import com.example.aquacontrol.viewmodel.detalle.DetalleLineaUiState
 import com.example.aquacontrol.viewmodel.detalle.DetalleLineaViewModel
 
 @Composable
+// Muestra la última medición y los historiales; permite registrar solo con permiso del rol.
 fun DetalleLineaScreen(
     navController: NavController,
     lineaId: Int,
     viewModel: DetalleLineaViewModel,
-    puedeRegistrar: Boolean = false
+    puedeRegistrar: Boolean = false,
+    graficoViewModel: GraficoTemperaturaViewModel? = null
 ) {
     LaunchedEffect(lineaId, viewModel) {
         viewModel.cargarResumen(lineaId)
     }
 
+    // Observa el ViewModel; cada cambio de estado actualiza la interfaz.
     val estado by viewModel.uiState.collectAsState()
 
     Surface(
@@ -117,6 +125,23 @@ fun DetalleLineaScreen(
                         }
                     }
 
+                    // AppNavHost entrega este ViewModel únicamente al perfil Supervisor.
+                    if (graficoViewModel != null) {
+                        item(key = "grafico_temperatura") {
+                            LaunchedEffect(lineaId, graficoViewModel) {
+                                graficoViewModel.cargar(lineaId)
+                            }
+                            // Suspende la observación cuando la pantalla pasa a segundo plano.
+                            val estadoGrafico by graficoViewModel.uiState
+                                .collectAsStateWithLifecycle()
+                            GraficoTemperatura(
+                                estado = estadoGrafico,
+                                onReintentar = graficoViewModel::reintentar
+                            )
+                        }
+                    }
+
+                    // Permiso del perfil: solo Operario puede acceder a acciones que registran datos.
                     if (puedeRegistrar) {
                         item(key = "registrar_temperatura") {
                             AquaTarjetaAccion(

@@ -1,3 +1,5 @@
+// Recoge los campos y la fotografía; delega validación y guardado al ViewModel.
+// Conecta con: viewmodel/flushing/RegistrarFlushingViewModel.kt (desde com/example/aquacontrol).
 package com.example.aquacontrol.iu.flushing
 
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -27,14 +29,17 @@ import com.example.aquacontrol.data.flushing.FotosFlushing
 import com.example.aquacontrol.viewmodel.flushing.RegistrarFlushingViewModel
 
 @Composable
+// Recoge los campos y la fotografía; delega validación y guardado al ViewModel.
 fun RegistrarFlushingScreen(
     navController: NavController,
     lineaId: Int,
     viewModel: RegistrarFlushingViewModel
 ) {
+    // Observa el ViewModel; cada cambio de estado actualiza la interfaz.
     val estado by viewModel.uiState.collectAsState()
     val context = LocalContext.current.applicationContext
 
+    // Conserva la captura pendiente y los campos siguientes si Android recrea la pantalla.
     var fotoPendiente by rememberSaveable(lineaId) {
         mutableStateOf<String?>(null)
     }
@@ -59,6 +64,7 @@ fun RegistrarFlushingScreen(
         mutableStateOf(estado.duracionSegundos)
     }
 
+    // Restaura los campos conservados en el ViewModel de la línea seleccionada.
     LaunchedEffect(lineaId, viewModel) {
         if (estado.lineaId != lineaId) {
             viewModel.seleccionarLinea(lineaId)
@@ -74,6 +80,7 @@ fun RegistrarFlushingScreen(
         }
     }
 
+    // Recibe el resultado de la cámara y conserva solo una evidencia válida.
     val camara = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.TakePicture()
     ) { capturada ->
@@ -111,9 +118,58 @@ fun RegistrarFlushingScreen(
         }
     }
 
+    // La confirmación pertenece a esta línea y se conserva al recrear la pantalla.
+    var confirmarGuardado by rememberSaveable(lineaId) { mutableStateOf(false) }
+
     val registrado = estado.eventoGuardado != null
     val capturando = fotoPendiente != null
+    // Bloquea la edición durante captura o guardado y después de completar el registro.
     val editable = !estado.guardando && !registrado && !capturando
+
+    // Cancelar o cerrar el diálogo conserva los campos y la foto para seguir editando.
+    if (confirmarGuardado && editable && estado.lineaId == lineaId) {
+        AlertDialog(
+            onDismissRequest = { confirmarGuardado = false },
+            title = { Text("Confirmar guardado") },
+            text = {
+                Text("¿Confirmas que deseas guardar los datos de flushing?")
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (confirmarGuardado && editable && estado.lineaId == lineaId) {
+                            // Cierra primero y vuelve a comprobar la evidencia antes de guardar.
+                            confirmarGuardado = false
+                            val foto = estado.fotoRuta
+                            if (
+                                foto != null &&
+                                !FotosFlushing.esFotoValida(context, foto)
+                            ) {
+                                viewModel.informarErrorFoto(
+                                    "La foto ya no está disponible. " +
+                                            "Toma una nueva antes de guardar."
+                                )
+                            } else {
+                                // El ViewModel valida los campos y delega la persistencia al repositorio.
+                                viewModel.registrarFlushing()
+                            }
+                        }
+                    },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text("Guardar")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { confirmarGuardado = false },
+                    modifier = Modifier.heightIn(min = 48.dp)
+                ) {
+                    Text("Cancelar")
+                }
+            }
+        )
+    }
 
     Surface(
         modifier = Modifier.fillMaxSize(),
@@ -277,21 +333,8 @@ fun RegistrarFlushingScreen(
             }
 
             Button(
-                onClick = {
-                    val foto = estado.fotoRuta
-
-                    if (
-                        foto != null &&
-                        !FotosFlushing.esFotoValida(context, foto)
-                    ) {
-                        viewModel.informarErrorFoto(
-                            "La foto ya no está disponible. " +
-                                    "Toma una nueva antes de guardar."
-                        )
-                    } else {
-                        viewModel.registrarFlushing()
-                    }
-                },
+                // Abre la confirmación sin guardar todavía el registro.
+                onClick = { confirmarGuardado = true },
                 enabled = editable && estado.lineaId == lineaId,
                 shape = RoundedCornerShape(14.dp),
                 elevation = ButtonDefaults.buttonElevation(
@@ -378,6 +421,7 @@ fun RegistrarFlushingScreen(
 }
 
 @Composable
+// Reutiliza un campo del formulario con etiqueta, teclado y error.
 private fun CampoFlushing(
     valor: String,
     alCambiar: (String) -> Unit,
