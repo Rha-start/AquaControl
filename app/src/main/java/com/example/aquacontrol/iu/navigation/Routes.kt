@@ -1,3 +1,4 @@
+// Centraliza los nombres de rutas y sus parámetros para la navegación.
 package com.example.aquacontrol.iu.navigation
 
 object Routes {
@@ -31,6 +32,12 @@ object Routes {
     const val HISTORIAL_TEMPERATURAS = "historialTemperaturas"
     const val HISTORIAL_TEMPERATURAS_PARAM =
         "$HISTORIAL_TEMPERATURAS/{lineaId}"
+
+    // Identifica una medición del historial por su línea y su ID.
+    // AppNavHost conectará esta ruta con DetalleTemperaturaScreen.
+    const val DETALLE_TEMPERATURA = "detalleTemperatura"
+    const val DETALLE_TEMPERATURA_PARAM =
+        "$DETALLE_TEMPERATURA/{lineaId}/{medicionId}"
 
     // Alertas
     const val ALERTAS = "alertas"

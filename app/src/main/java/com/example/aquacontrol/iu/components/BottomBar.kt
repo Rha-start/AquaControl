@@ -1,3 +1,4 @@
+// Ofrece Inicio, Granjas y Alertas; muestra los contadores de advertencias y críticos.
 package com.example.aquacontrol.iu.components
 
 import androidx.compose.foundation.BorderStroke
@@ -33,6 +34,7 @@ import com.example.aquacontrol.ui.theme.ContenidoCriticoClaro
 import com.example.aquacontrol.ui.theme.Red
 
 @Composable
+// Ofrece Inicio, Granjas y Alertas; muestra los contadores de advertencias y críticos.
 fun BottomBar(
     navController: NavController,
     perfil: PerfilUsuario? = null,
@@ -54,6 +56,8 @@ fun BottomBar(
         Routes.LINEAS_PARAM,
         Routes.DETALLE_LINEA_PARAM,
         Routes.HISTORIAL_TEMPERATURAS_PARAM,
+        // El detalle de una medición pertenece al recorrido de Granjas.
+        Routes.DETALLE_TEMPERATURA_PARAM,
         Routes.REGISTRAR_TEMPERATURA_PARAM,
         Routes.FLUSHING,
         Routes.FLUSHING_PARAM,
@@ -76,6 +80,7 @@ fun BottomBar(
         indicatorColor = Color.White.copy(alpha = 0.18f)
     )
 
+    // Navega desde la barra inferior evitando acumular copias del mismo destino.
     fun abrirDestino(ruta: String) {
         if (currentRoute != ruta) {
             navController.navigate(ruta) {

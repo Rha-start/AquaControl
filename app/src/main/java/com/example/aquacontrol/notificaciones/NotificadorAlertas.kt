@@ -1,3 +1,4 @@
+// Emite avisos por cambio de estado y conserva el ID de la medición que los originó.
 package com.example.aquacontrol.notificaciones
 
 import android.Manifest
@@ -9,6 +10,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
@@ -22,6 +24,7 @@ class NotificadorAlertas(context: Context) {
 
     private val appContext = context.applicationContext
 
+    // Registra los canales de advertencia y crítico requeridos desde Android 8.
     fun crearCanales() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
             return
@@ -53,6 +56,7 @@ class NotificadorAlertas(context: Context) {
         )
     }
 
+    // Notifica solo cambios a advertencia/crítico y abre la medición original al tocar el aviso.
     fun notificarCambio(
         medicion: MedicionTemperatura,
         estadoAnterior: EstadoLinea?,
@@ -116,6 +120,7 @@ class NotificadorAlertas(context: Context) {
                     Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
 
+        // Conserva el destino de esta medición para que tocar el aviso no abra una lectura posterior.
         val abrirAlerta = PendingIntent.getActivity(
             appContext,
             0,
@@ -140,6 +145,10 @@ class NotificadorAlertas(context: Context) {
                 }
             )
             .setDefaults(NotificationCompat.DEFAULT_ALL)
+            // Identifica la medición del aviso para retirarlo si se corrige o elimina.
+            .addExtras(Bundle().apply {
+                putLong(EXTRA_MEDICION_ID, medicion.id)
+            })
             .setContentIntent(abrirAlerta)
             .setAutoCancel(true)
             .setWhen(medicion.fechaHora)
@@ -161,6 +170,28 @@ class NotificadorAlertas(context: Context) {
                 "No se pudo mostrar la notificación por falta de permiso.",
                 e
             )
+        }
+    }
+
+    // El repositorio llama después de confirmar una edición o eliminación en Room.
+    // No retira avisos de otras líneas ni de otra medición identificada.
+    fun retirarAvisoDeMedicion(lineaId: Int, medicionId: Long) {
+        val manager = appContext.getSystemService(NotificationManager::class.java)
+        val etiqueta = "temperatura_linea_$lineaId"
+        try {
+            val aviso = manager.activeNotifications.firstOrNull {
+                it.tag == etiqueta && it.id == 0
+            } ?: return
+            val extras = aviso.notification.extras
+            val tieneIdentificador = extras?.containsKey(EXTRA_MEDICION_ID) == true
+            // Los avisos de versiones anteriores no guardaban este dato.
+            // En ese caso se retira el aviso de la línea para no dejar información dudosa.
+            if (!tieneIdentificador || extras?.getLong(EXTRA_MEDICION_ID) == medicionId) {
+                manager.cancel(etiqueta, 0)
+            }
+        } catch (e: Exception) {
+            // Un fallo del sistema de avisos no invalida el cambio ya guardado en Room.
+            Log.w("NotificadorAlertas", "No se pudo retirar el aviso de la medición.", e)
         }
     }
 

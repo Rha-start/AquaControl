@@ -1,3 +1,5 @@
+// Muestra mediciones persistidas con filtros y controles de paginación.
+// Conecta con: viewmodel/historial/HistorialTemperaturaViewModel.kt (desde com/example/aquacontrol).
 package com.example.aquacontrol.iu.historial
 
 import androidx.compose.foundation.layout.Arrangement
@@ -43,10 +45,14 @@ import com.example.aquacontrol.viewmodel.historial.HistorialTemperaturaViewModel
 import kotlinx.coroutines.launch
 
 @Composable
+// Muestra mediciones persistidas con filtros y controles de paginación.
 fun HistorialTemperaturaScreen(
     lineaId: Int,
-    viewModel: HistorialTemperaturaViewModel
+    viewModel: HistorialTemperaturaViewModel,
+    // AppNavHost recibe el ID y abre el detalle dentro de esta misma línea.
+    onVerDetalle: (Long) -> Unit
 ) {
+    // Observa el ViewModel; cada cambio de estado actualiza la interfaz.
     val estado by viewModel.uiState.collectAsState()
     val listaState = rememberLazyListState()
     val scope = rememberCoroutineScope()
@@ -55,6 +61,7 @@ fun HistorialTemperaturaScreen(
         mutableStateOf(false)
     }
 
+    // Solicita el historial de la línea; el ViewModel conserva los filtros vigentes.
     LaunchedEffect(lineaId, viewModel) {
         viewModel.cargarHistorial(lineaId)
     }
@@ -161,7 +168,9 @@ fun HistorialTemperaturaScreen(
                         items = estado.mediciones,
                         key = { "medicion_${it.id}" }
                     ) { medicion ->
+                        // Abre la medición exacta, conservando el estado del historial en su ViewModel.
                         Card(
+                            onClick = { onVerDetalle(medicion.id) },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(20.dp),
                             border = BorderStroke(
@@ -205,6 +214,12 @@ fun HistorialTemperaturaScreen(
                                     },
                                     color = Muted,
                                     style = MaterialTheme.typography.bodyMedium
+                                )
+
+                                Text(
+                                    text = "Ver detalle",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
