@@ -153,7 +153,6 @@ La estructura de AquaControl 4.0 se organiza por responsabilidades y dominios fu
 ```text
 ## 📁 Estructura del proyecto AquaControl
 
-```text
 AquaControl/
 └── app/
     └── src/
@@ -313,11 +312,6 @@ AquaControl/
                 └── ExampleUnitTest.kt
 
 ```
-
-
-
-```
-
 ---
 
 ## 🧭 Navegación
@@ -458,8 +452,7 @@ Proyecto desarrollado para la **Evaluación Aplicada 2 (EA2)**.
 | **Institución** | DUOC UC                            |
 | **Proyecto**    | AquaControl 4.0                    |
 | **Versión**     | 4.0                                |
-``
----
+
 
 ## 📄 Licencia
 
