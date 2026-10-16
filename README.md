@@ -151,207 +151,169 @@ DataSource DataSource
 La estructura de AquaControl 4.0 se organiza por responsabilidades y dominios funcionales.
 
 ```text
-AquaControl/
-│
-│── com/example/aquacontrol/
-│   ├── data/
-│   │   ├── flushing/                         ← RIMSKY
-│   │   │   ├── local/
-│   │   │   │   ├── FlushingDao.kt
-│   │   │   │   ├── FlushingEntity.kt
-│   │   │   │   └── FlushingLocalDataSource.kt
-│   │   │   ├── remote/
-│   │   │   │   ├── FlushingApiClient.kt
-│   │   │   │   ├── FlushingApiService.kt
-│   │   │   │   └── FlushingRemoteDataSource.kt
-│   │   │   ├── FlushingDataSource.kt
-│   │   │   ├── FlushingDTO.kt
-│   │   │   ├── FotosFlushing.kt              ← CHRIS
-│   │   │   └── simulacion/
-│   │   │       └── GeneradorTemperatura.kt   ← CHRIS
-│   │   │
-│   │   ├── temperatura/                      ← CHRIS
-│   │   │   ├── local/
-│   │   │   │   ├── MedicionTemperaturaDao.kt
-│   │   │   │   ├── MedicionTemperaturaEntity.kt
-│   │   │   │   └── TemperaturaLocalDataSource.kt
-│   │   │   └── TemperaturaDataSource.kt
-│   │   │
-│   │   ├── AppDatabase.kt                    ← RIMSKY
-│   │   │
-│   │   └── repository/
-│   │       ├── bebedero/                     ← CHRIS
-│   │       │   └── BebederoRepository.kt
-│   │       │
-│   │       ├── data/                         ← RIMSKY
-│   │       │   └── FlushingRemoteRepository.kt
-│   │       │
-│   │       ├── flushing/                     ← RIMSKY
-│   │       │   ├── FlushingRepository.kt
-│   │       │   └── FlushingRepositoryImpl.kt
-│   │       │
-│   │       └── temperatura/                  ← CHRIS
-│   │           ├── TemperaturaRepository.kt
-│   │           └── TemperaturaRepositoryImpl.kt
-│
-│
-│   ├── iu/
-│   │   ├── alertas/                           ← RIMSKY
-│   │   │   ├── AlertasScreen.kt
-│   │   │   └── DetalleAlertaScreen.kt
-│   │   │
-│   │   ├── components/                        ← CHRIS
-│   │   │   ├── AquaEncabezado.kt
-│   │   │   ├── AquaPanelResumen.kt
-│   │   │   ├── AquaTarjetaAccion.kt
-│   │   │   ├── AquaTarjetaRol.kt
-│   │   │   ├── BottomBar.kt                  ← RIMSKY
-│   │   │   ├── IndicadorEstado.kt
-│   │   │   └── ReusableButton.kt             ← RIMSKY
+## 📁 Estructura del proyecto AquaControl
 
-│   │   │
-│   │   ├── detalle/                           ← RIMSKY
-│   │   │   └── DetalleLineaScreen.kt
-│   │   │
-│   │   ├── flushing/                          ← RIMSKY
-│   │   │   ├── CalendarioFlushing.kt
-│   │   │   ├── FlushingDetalleScreen.kt      ← CHRIS
-│   │   │   ├── FlushingHomeScreen.kt         
-│   │   │   ├── FlushingScreen.kt
-│   │   │   ├── FotoFlushing.kt              ← CHRIS
-│   │   │   └── RegistrarFlushingScreen.kt
-│   │   │
-│   │   ├── galpones/                          ← RIMSKY
-│   │   │   └── GalponScreen.kt
-│   │   │
-│   │   ├── granjas/                           ← RIMSKY
-│   │   │   └── GranjaScreen.kt
-│   │   │
-│   │   ├── historial/                         ← CHRIS
-│   │   │   ├── FiltrosTemperaturaPanel.kt
-│   │   │   └── HistorialTemperaturaScreen.kt
-│   │   │
-│   │   ├── lineas/                            ← RIMSKY
-│   │   │   └── LineaScreen.kt
-│   │   │
-│   │   ├── navigation/                        ← RIMSKY
-│   │   │   ├── AppNavHost.kt
-│   │   │   └── Routes.kt
-│   │   │
-│   │   ├── roles/                             ← RIMSKY
-│   │   │   ├── OperarioScreen.kt
-│   │   │   ├── RolSelectionScreen.kt
-│   │   │   └── SupervisorScreen.kt
-│   │   │
-│   │   ├── temperatura/                       ← CHRIS
-│   │   │   └── RegistrarTemperaturaScreen.kt
-│   │   │
-│   │   └── simulacion/                        ← CHRIS
-│   │       └── SimulacionScreen.kt
-│
-│
-│   ├── model/
-│   │   ├── estado/                            ← CHRIS
-│   │   │   └── EstadoLinea.kt
-│   │   │
-│   │   ├── flushing/                          ← CHRIS
-│   │   │   ├── EventoFlushing.kt
-│   │   │   ├── FechasCalendarioFlushing.kt
-│   │   │   └── FlushingDTO.kt                ← RIMSKY
-│   │   │
-│   │   ├── galpon/                            ← CHRIS
-│   │   │   └── Galpon.kt
-│   │   │
-│   │   ├── granja/                            ← CHRIS
-│   │   │   └── Granja.kt
-│   │   │
-│   │   ├── historial/                         ← CHRIS
-│   │   │   └── HistorialTemperatura.kt
-│   │   │
-│   │   ├── linea/                             ← CHRIS
-│   │   │   ├── LineaBebedero.kt
-│   │   │   └── LineaMonitoreada.kt
-│   │   │
-│   │   ├── perfil/                            ← CHRIS
-│   │   │   └── PerfilUsuario.kt
-│   │   │
-│   │   ├── simulacion/                        ← CHRIS
-│   │   │   └── EscenarioSimulacion.kt
-│   │   │
-│   │   └── temperatura/                       ← CHRIS
-│   │       ├── FechasHistorialTemperatura.kt
-│   │       ├── FiltroHistorialTemperatura.kt
-│   │       ├── MedicionTemperatura.kt
-│   │       └── OrigenMedicion.kt
-│
-│
-│   ├── notificaciones/                        ← CHRIS
-│   │   └── NotificadorAlertas.kt
-│
-│
-│   ├── repository/
-│   │   ├── bebedero/                          ← CHRIS
-│   │   │   └── BebederoRepository.kt
-│   │   │
-│   │   ├── data/                              ← RIMSKY
-│   │   │   └── FlushingRemoteRepository.kt
-│   │   │
-│   │   ├── flushing/                          ← RIMSKY
-│   │   │   ├── FlushingRepository.kt
-│   │   │   └── FlushingRepositoryImpl.kt
-│   │   │
-│   │   └── temperatura/                       ← CHRIS
-│   │       ├── TemperaturaRepository.kt
-│   │       └── TemperaturaRepositoryImpl.kt
-│
-│
-│   ├── viewmodel/
-│   │   ├── alertas/                           ← CHRIS
-│   │   │   └── AlertasViewModel.kt
-│   │   │
-│   │   ├── detalle/                           ← CHRIS
-│   │   │   ├── DetalleLineaUiState.kt
-│   │   │   └── DetalleLineaViewModel.kt
-│   │   │
-│   │   ├── flushing/                          ← CHRIS
-│   │   │   ├── FlushingUiState.kt
-│   │   │   ├── FlushingViewModel.kt
-│   │   │   ├── RegistrarFlushingUiState.kt
-│   │   │   ├── RegistrarFlushingViewModel.kt
-│   │   │
-│   │   ├── galpones/                          ← CHRIS
-│   │   │   ├── GalponUiState.kt
-│   │   │   └── GalponViewModel.kt
-│   │   │
-│   │   ├── granjas/                           ← CHRIS
-│   │   │   ├── GranjaUiState.kt
-│   │   │   └── GranjaViewModel.kt
-│   │   │
-│   │   ├── historial/                         ← CHRIS
-│   │   │   ├── HistorialTemperaturaUiState.kt
-│   │   │   └── HistorialTemperaturaViewModel.kt
-│   │   │
-│   │   ├── lineas/                            ← CHRIS
-│   │   │   ├── LineasViewModel.kt
-│   │   │   └── LineaUiState.kt
-│   │   │
-│   │   ├── perfil/                            ← CHRIS
-│   │   │   └── PerfilViewModel.kt
-│   │   │
-│   │   ├── simulacion/                        ← CHRIS
-│   │   │   ├── SimulacionUiState.kt
-│   │   │   └── SimulacionViewModel.kt
-│   │   │
-│   │   ├── supervisor/                        ← CHRIS
-│   │   │   ├── SupervisorUiState.kt
-│   │   │   └── SupervisorViewModel.kt
-│   │   │
-│   │   └── temperatura/                       ← CHRIS
-│   │       ├── RegistrarTemperaturaUiState.kt
-│   │       └── RegistrarTemperaturaViewModel.kt
-│
-│
-│   └── MainActivity.kt                        ← RIMSKY
+```text
+AquaControl/
+└── app/
+    └── src/
+        ├── androidTest/
+        │   └── java/com/example/aquacontrol/
+        │       └── ExampleInstrumentedTest.kt
+        |       │     └── java/com/example/aquacontrol/
+        │       ├── MainActivity.kt [RIMSKY]
+        │       │
+        │       ├── data/
+        │       │   ├── AppDatabase.kt [RIMSKY]
+        │       │   ├── flushing/
+        │       │   │   ├── FlushingDataSource.kt [RIMSKY]
+        │       │   │   ├── FotosFlushing.kt [CHRIS]
+        │       │   │   ├── local/
+        │       │   │   │   ├── FlushingDao.kt [RIMSKY]
+        │       │   │   │   ├── FlushingEntity.kt [RIMSKY]
+        │       │   │   │   └── FlushingLocalDataSource.kt [RIMSKY]
+        │       │   │   └── remote/
+        │       │   │       ├── FlushingApiClient.kt [RIMSKY]
+        │       │   │       ├── FlushingApiService.kt [RIMSKY]
+        │       │   │       └── FlushingRemoteDataSource.kt [RIMSKY]
+        │       │   ├── simulacion/
+        │       │   │   └── GeneradorTemperatura.kt [CHRIS]
+        │       │   └── temperatura/
+        │       │       └── local/
+        │       │           ├── MedicionTemperaturaDao.kt [CHRIS]
+        │       │           ├── MedicionTemperaturaEntity.kt [CHRIS]
+        │       │           └── TemperaturaLocalDataSource.kt [CHRIS]
+        │       │
+        │       ├── iu/
+        │       │   ├── alertas/ [RIMSKY]
+        │       │   │   ├── AlertasScreen.kt
+        │       │   │   └── DetalleAlertaScreen.kt
+        │       │   ├── components/
+        │       │   │   ├── AquaEncabezado.kt [CHRIS]
+        │       │   │   ├── AquaPanelResumen.kt [CHRIS]
+        │       │   │   ├── AquaTarjetaAccion.kt [CHRIS]
+        │       │   │   ├── AquaTarjetaRol.kt [CHRIS]
+        │       │   │   ├── BottomBar.kt [RIMSKY]
+        │       │   │   ├── IndicadorEstado.kt [CHRIS]
+        │       │   │   └── ReusableButton.kt [RIMSKY]
+        │       │   ├── detalle/ [RIMSKY]
+        │       │   │   └── DetalleLineaScreen.kt
+        │       │   ├── flushing/
+        │       │   │   ├── CalendarioFlushing.kt [RIMSKY]
+        │       │   │   ├── FlushingDetalleScreen.kt [CHRIS]
+        │       │   │   ├── FlushingHomeScreen.kt [RIMSKY]
+        │       │   │   ├── FlushingScreen.kt [RIMSKY]
+        │       │   │   ├── FotoFlushing.kt [CHRIS]
+        │       │   │   └── RegistrarFlushingScreen.kt [RIMSKY]
+        │       │   ├── galpones/ [RIMSKY]
+        │       │   │   └── GalponScreen.kt
+        │       │   ├── granjas/ [RIMSKY]
+        │       │   │   └── GranjaScreen.kt
+        │       │   ├── historial/ [CHRIS]
+        │       │   │   ├── FiltrosTemperaturaPanel.kt
+        │       │   │   └── HistorialTemperaturaScreen.kt
+        │       │   ├── lineas/ [RIMSKY]
+        │       │   │   └── LineaScreen.kt
+        │       │   ├── navigation/ [RIMSKY]
+        │       │   │   ├── AppNavHost.kt
+        │       │   │   └── Routes.kt
+        │       │   ├── roles/ [RIMSKY]
+        │       │   │   ├── OperarioScreen.kt
+        │       │   │   ├── RolSelectionScreen.kt
+        │       │   │   └── SupervisorScreen.kt
+        │       │   ├── simulacion/ [CHRIS]
+        │       │   │   └── SimulacionScreen.kt
+        │       │   └── temperatura/ [CHRIS]
+        │       │       ├── DetalleTemperaturaScreen.kt
+        │       │       ├── GraficoTemperatura.kt
+        │       │       └── RegistrarTemperaturaScreen.kt 
+        │       │
+        │       ├── model/
+        │       │   ├── estado/EstadoLinea.kt [CHRIS]
+        │       │   ├── flushing/
+        │       │   │   ├── EventoFlushing.kt [CHRIS]
+        │       │   │   ├── FechasCalendarioFlushing.kt [CHRIS]
+        │       │   │   └── FlushingDTO.kt [RIMSKY]
+        │       │   ├── galpon/Galpon.kt [CHRIS]
+        │       │   ├── granja/Granja.kt [CHRIS]
+        │       │   ├── historial/HistorialTemperatura.kt [CHRIS]
+        │       │   ├── linea/
+        │       │   │   ├── LineaBebedero.kt [CHRIS]
+        │       │   │   └── LineaMonitoreada.kt [CHRIS]
+        │       │   ├── perfil/PerfilUsuario.kt [CHRIS]
+        │       │   ├── simulacion/EscenarioSimulacion.kt [CHRIS]
+        │       │   └── temperatura/
+        │       │       ├── FechasHistorialTemperatura.kt [CHRIS]
+        │       │       ├── FiltroHistorialTemperatura.kt [CHRIS]
+        │       │       ├── MedicionTemperatura.kt [CHRIS]
+        │       │       └── OrigenMedicion.kt [CHRIS]
+        │       │
+        │       ├── notificaciones/
+        │       │   └── NotificadorAlertas.kt [CHRIS]
+        │       │
+        │       ├── repository/
+        │       │   ├── bebedero/
+        │       │   │   └── BebederoRepository.kt [CHRIS]
+        │       │   ├── data/
+        │       │   │   └── FlushingRemoteRepository.kt [RIMSKY]
+        │       │   ├── flushing/
+        │       │   │   ├── FlushingRepository.kt [RIMSKY]
+        │       │   │   └── FlushingRepositoryImpl.kt [RIMSKY]
+        │       │   └── temperatura/
+        │       │       ├── TemperaturaRepository.kt [CHRIS]
+        │       │       └── TemperaturaRepositoryImpl.kt [CHRIS]
+        │       │
+        │       ├── ui/theme/
+        │       │   ├── Color.kt [RIMSKY]
+        │       │   ├── Theme.kt [RIMSKY]
+        │       │   └── Type.kt [RIMSKY]
+        │       │
+        │       └── viewmodel/
+        │           ├── alertas/AlertasViewModel.kt [CHRIS]
+        │           ├── detalle/
+        │           │   ├── DetalleLineaUiState.kt [CHRIS]
+        │           │   └── DetalleLineaViewModel.kt [CHRIS]
+        │           ├── flushing/
+        │           │   ├── DetalleFlushingUiState.kt
+        │           │   ├── DetalleFlushingViewModel.kt
+        │           │   ├── FlushingUiState.kt [CHRIS]
+        │           │   ├── FlushingViewModel.kt [CHRIS]
+        │           │   ├── RegistrarFlushingUiState.kt [CHRIS]
+        │           │   ├── RegistrarFlushingViewModel.kt [CHRIS]
+        │           │   ├── RegistrarFlushingViewModelFactory.kt [RIMSKY]
+        │           │   └── SeleccionFlushingViewModel.kt [CHRIS]
+        │           ├── galpones/
+        │           │   ├── GalponUiState.kt [CHRIS]
+        │           │   └── GalponViewModel.kt [CHRIS]
+        │           ├── granjas/
+        │           │   ├── GranjaUiState.kt [CHRIS]
+        │           │   └── GranjaViewModel.kt [CHRIS]
+        │           ├── historial/
+        │           │   ├── HistorialTemperaturaUiState.kt [CHRIS]
+        │           │   └── HistorialTemperaturaViewModel.kt [CHRIS]
+        │           ├── lineas/
+        │           │   ├── LineaUiState.kt [CHRIS]
+        │           │   └── LineasViewModel.kt [CHRIS]
+        │           ├── perfil/PerfilViewModel.kt [CHRIS]
+        │           ├── simulacion/
+        │           │   ├── SimulacionUiState.kt [CHRIS]
+        │           │   └── SimulacionViewModel.kt [CHRIS]
+        │           ├── supervisor/
+        │           │   ├── SupervisorUiState.kt [CHRIS]
+        │           │   └── SupervisorViewModel.kt [CHRIS]
+        │           └── temperatura/ [CHRIS]
+        │               ├── DetalleTemperaturaUiState.kt
+        │               ├── DetalleTemperaturaViewModel.kt
+        │               ├── GraficoTemperaturaUiState.kt
+        │               ├── GraficoTemperaturaViewModel.kt
+        │               ├── RegistrarTemperaturaUiState.kt 
+        │               └── RegistrarTemperaturaViewModel.kt         │
+        └── test/
+            └── java/com/example/aquacontrol/
+                └── ExampleUnitTest.kt
+
+```
+
 
 
 ```
